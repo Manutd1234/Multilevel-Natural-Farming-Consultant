@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kheti Saathi | Natural Farming Consultant</title>
+    <link rel="stylesheet" href="src/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48" role="img">
+            <path d="M24 4c9 4 16 12 16 22 0 10-7 18-16 18S8 36 8 26C8 16 15 8 24 4Z" />
+            <path d="M24 13v23M16 25c5 0 8 2 8 7M32 21c-5 0-8 2-8 8" />
+          </svg>
+        </div>
+        <div>
+          <p>Voice-Based Natural Farming Consultant</p>
+          <h1>Kheti Saathi</h1>
+        </div>
+      </div>
+      <label class="field compact">
+        <span>Language</span>
+        <select id="language">
+          <option value="hinglish">Hinglish</option>
+          <option value="hi">हिंदी</option>
+          <option value="en">English</option>
+        </select>
+      </label>
+    </header>
+
+    <main class="app-shell">
+      <section class="voice-stage" aria-labelledby="voice-title">
+        <div class="stage-copy">
+          <p class="eyebrow" id="networkStatus">Offline-ready demo data</p>
+          <h2 id="voice-title">Ask about weather, mandi prices, seed, or cost</h2>
+          <p id="listeningStatus" class="listening-status">Ready</p>
+        </div>
+
+        <button class="mic-button" id="micButton" type="button" aria-label="Start voice question" title="Start voice question">
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M24 29c4.4 0 8-3.6 8-8v-7c0-4.4-3.6-8-8-8s-8 3.6-8 8v7c0 4.4 3.6 8 8 8Z" />
+            <path d="M10 21c0 7.7 6.3 14 14 14s14-6.3 14-14M24 35v7M17 42h14" />
+          </svg>
+        </button>
+
+        <div class="query-row">
+          <input id="questionInput" type="text" autocomplete="off" value="Kal barish hogi kya? Main bajra ka beej daal sakta hoon?" />
+          <button class="primary-action" id="askButton" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 14-7-4 14-3-6-7-1Z" /></svg>
+            Ask
+          </button>
+        </div>
+
+        <div class="quick-grid" id="quickGrid" aria-label="Quick questions"></div>
+      </section>
+
+      <section class="context-bar" aria-label="Farm context">
+        <label class="field">
+          <span>District</span>
+          <select id="districtSelect"></select>
+        </label>
+        <label class="field">
+          <span>Crop</span>
+          <select id="cropSelect"></select>
+        </label>
+        <label class="field">
+          <span>Season</span>
+          <select id="seasonSelect">
+            <option value="kharif">Kharif</option>
+            <option value="rabi">Rabi</option>
+            <option value="zaid">Zaid</option>
+          </select>
+        </label>
+        <label class="field numeric">
+          <span>Acres</span>
+          <input id="acreInput" type="number" min="0.25" max="50" step="0.25" value="2" />
+        </label>
+      </section>
+
+      <section class="signal-grid" id="signalGrid" aria-label="Live farm signals"></section>
+
+      <section class="advisor-output" aria-labelledby="answer-title">
+        <div class="answer-head">
+          <div>
+            <p class="eyebrow">Advisor answer</p>
+            <h2 id="answer-title">Local, short, and verifiable</h2>
+          </div>
+          <button class="icon-action" id="replayButton" type="button" aria-label="Replay answer" title="Replay answer">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M11 5 6 9H3v6h3l5 4V5ZM15 9a5 5 0 0 1 0 6M18 6a9 9 0 0 1 0 12" />
+            </svg>
+          </button>
+        </div>
+
+        <p class="answer-text" id="answerText">Select a question or speak to begin.</p>
+        <div class="step-list" id="stepList"></div>
+        <div class="source-list" id="sourceList"></div>
+      </section>
+    </main>
+
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>

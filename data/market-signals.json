@@ -1,0 +1,100 @@
+{
+  "lastUpdated": "2026-06-14",
+  "disclaimer": "Prototype values are demo market bands. Connect Agmarknet/eNAM APIs or official exports before production use.",
+  "districts": [
+    {
+      "id": "hisar",
+      "name": "Hisar",
+      "state": "Haryana",
+      "latitude": 29.1492,
+      "longitude": 75.7217,
+      "nearestMandis": ["Hisar", "Hansi", "Barwala"],
+      "climateNote": "Semi-arid; watch hot wind, irrigation timing, and sowing after useful rainfall."
+    },
+    {
+      "id": "karnal",
+      "name": "Karnal",
+      "state": "Haryana",
+      "latitude": 29.6857,
+      "longitude": 76.9905,
+      "nearestMandis": ["Karnal", "Gharaunda", "Indri"],
+      "climateNote": "Rice-wheat belt; drainage and stubble-to-compost planning matter during monsoon."
+    },
+    {
+      "id": "sirsa",
+      "name": "Sirsa",
+      "state": "Haryana",
+      "latitude": 29.5336,
+      "longitude": 75.0177,
+      "nearestMandis": ["Sirsa", "Dabwali", "Ellenabad"],
+      "climateNote": "Cotton and bajra zone; monitor heat stress, whitefly risk, and irrigation intervals."
+    }
+  ],
+  "crops": [
+    {
+      "id": "wheat",
+      "name": "Wheat",
+      "hindiName": "गेहूं",
+      "aliases": ["wheat", "gehun", "gehu", "गेहूं", "गेहु"],
+      "season": "rabi",
+      "unit": "quintal",
+      "priceBand": { "low": 2320, "modal": 2380, "high": 2450 },
+      "trend": "firm",
+      "marketNote": "Rabi arrival pressure eases after peak harvest; verify MSP and nearby mandi quote before sale."
+    },
+    {
+      "id": "bajra",
+      "name": "Pearl millet",
+      "hindiName": "बाजरा",
+      "aliases": ["bajra", "pearl millet", "millet", "बाजरा"],
+      "season": "kharif",
+      "unit": "quintal",
+      "priceBand": { "low": 2160, "modal": 2260, "high": 2390 },
+      "trend": "seasonal watch",
+      "marketNote": "Demand depends on feed and flour buyers; sowing timing matters more than short-term selling signals now."
+    },
+    {
+      "id": "moong",
+      "name": "Green gram",
+      "hindiName": "मूंग",
+      "aliases": ["moong", "mung", "green gram", "मूंग"],
+      "season": "kharif",
+      "unit": "quintal",
+      "priceBand": { "low": 7600, "modal": 8150, "high": 8900 },
+      "trend": "volatile",
+      "marketNote": "Quality, moisture, and pulse demand can move prices quickly; clean and dry produce before sale."
+    },
+    {
+      "id": "mustard",
+      "name": "Mustard",
+      "hindiName": "सरसों",
+      "aliases": ["mustard", "sarson", "सरसों"],
+      "season": "rabi",
+      "unit": "quintal",
+      "priceBand": { "low": 5100, "modal": 5450, "high": 5850 },
+      "trend": "range-bound",
+      "marketNote": "Oilseed prices react to oil demand and imports; compare mandi, processor, and storage options."
+    },
+    {
+      "id": "cotton",
+      "name": "Cotton",
+      "hindiName": "कपास",
+      "aliases": ["cotton", "kapas", "कपास"],
+      "season": "kharif",
+      "unit": "quintal",
+      "priceBand": { "low": 6500, "modal": 7050, "high": 7600 },
+      "trend": "weather sensitive",
+      "marketNote": "Lint quality and pest damage affect realized price; preserve crop health before harvest."
+    }
+  ],
+  "officialMarketSources": [
+    {
+      "name": "Agmarknet",
+      "url": "https://agmarknet.gov.in/"
+    },
+    {
+      "name": "eNAM",
+      "url": "https://www.enam.gov.in/"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "lastUpdated": "2026-06-14",
+  "systemGuardrails": [
+    "Answer only from weather, market, seed, finance, and natural farming knowledge available to the app.",
+    "Give short advice first, then one or two practical next steps.",
+    "Do not present demo market prices as live prices.",
+    "Ask for district, crop, season, or acreage when missing.",
+    "For disease, pesticide, legal, credit approval, or emergency risks, ask the farmer to verify with a local agriculture officer."
+  ],
+  "trustedSources": [
+    {
+      "name": "Agmarknet",
+      "url": "https://agmarknet.gov.in/"
+    },
+    {
+      "name": "eNAM",
+      "url": "https://www.enam.gov.in/"
+    },
+    {
+      "name": "Open-Meteo Forecast API",
+      "url": "https://open-meteo.com/en/docs"
+    },
+    {
+      "name": "India Meteorological Department",
+      "url": "https://mausam.imd.gov.in/"
+    },
+    {
+      "name": "National Mission on Natural Farming",
+      "url": "https://naturalfarming.dac.gov.in/"
+    }
+  ],
+  "safetyNotes": {
+    "hinglish": "Yeh demo salah mausam, mandi aur kheti data par based hai. Bechne, beej kharidne, ya dawa istemal karne se pehle local adhikari ya mandi se pakka kar lein.",
+    "hi": "यह डेमो सलाह मौसम, मंडी और खेती की जानकारी पर आधारित है। बेचने, बीज खरीदने या दवा इस्तेमाल करने से पहले स्थानीय अधिकारी या मंडी से पुष्टि करें।",
+    "en": "This demo advice uses weather, market, and farming data. Verify prices, seed purchase, and treatment decisions locally before acting."
+  },
+  "quickQuestions": [
+    {
+      "label": "Rain before sowing",
+      "text": "Kal barish hogi kya? Main bajra ka beej daal sakta hoon?"
+    },
+    {
+      "label": "Mandi price",
+      "text": "Aaj mandi mein gehun ka rate kya hai?"
+    },
+    {
+      "label": "Seed and cost",
+      "text": "Mere paas 2 acre zameen hai, moong ka beej aur kharcha batao."
+    },
+    {
+      "label": "Natural start",
+      "text": "Natural farming start karne mein kitna kharcha aayega?"
+    }
+  ]
+}

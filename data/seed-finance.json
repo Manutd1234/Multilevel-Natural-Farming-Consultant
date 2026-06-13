@@ -1,0 +1,56 @@
+{
+  "lastUpdated": "2026-06-14",
+  "currency": "INR",
+  "guidance": [
+    {
+      "cropId": "wheat",
+      "seedRateKgPerAcre": 40,
+      "seedCostPerKg": { "low": 32, "high": 46 },
+      "naturalInputsPerAcre": { "low": 1300, "high": 2200 },
+      "seedAdvice": "Use certified seed or clean farm-saved seed. Treat seed with beejamrit before sowing.",
+      "rotationAdvice": "Follow with moong or fodder legume to support soil nitrogen and break disease cycles.",
+      "subsidyNote": "Check state agriculture office, PM-KISAN eligibility, and natural farming scheme enrollment."
+    },
+    {
+      "cropId": "bajra",
+      "seedRateKgPerAcre": 2,
+      "seedCostPerKg": { "low": 180, "high": 320 },
+      "naturalInputsPerAcre": { "low": 900, "high": 1600 },
+      "seedAdvice": "Choose drought-tolerant bajra variety for light soils. Sow after useful rain and keep seed shallow.",
+      "rotationAdvice": "Rotate with gram, mustard, or moong to reduce pest pressure and improve income spread.",
+      "subsidyNote": "Ask the local agriculture department about seed mini-kits and millet promotion support."
+    },
+    {
+      "cropId": "moong",
+      "seedRateKgPerAcre": 8,
+      "seedCostPerKg": { "low": 95, "high": 150 },
+      "naturalInputsPerAcre": { "low": 850, "high": 1450 },
+      "seedAdvice": "Use short-duration moong where monsoon window is uncertain. Treat with rhizobium and beejamrit.",
+      "rotationAdvice": "Good after wheat and before mustard; helps soil nitrogen and gives quick cash flow.",
+      "subsidyNote": "Pulse seed support may be available through state seed outlets or Krishi Vigyan Kendra programs."
+    },
+    {
+      "cropId": "mustard",
+      "seedRateKgPerAcre": 1.5,
+      "seedCostPerKg": { "low": 230, "high": 420 },
+      "naturalInputsPerAcre": { "low": 1000, "high": 1800 },
+      "seedAdvice": "Use low seed rate with line sowing. Avoid waterlogging and keep early aphid monitoring.",
+      "rotationAdvice": "Works after bajra or moong. Avoid repeating mustard on the same plot every year.",
+      "subsidyNote": "Verify oilseed seed subsidy and soil-health-card recommendations locally."
+    },
+    {
+      "cropId": "cotton",
+      "seedRateKgPerAcre": 1.6,
+      "seedCostPerKg": { "low": 750, "high": 1250 },
+      "naturalInputsPerAcre": { "low": 1900, "high": 3200 },
+      "seedAdvice": "Pick locally approved seed and maintain refuge practices where applicable. Monitor whitefly weekly.",
+      "rotationAdvice": "Rotate with wheat, gram, or fodder. Avoid continuous cotton in pest-prone fields.",
+      "subsidyNote": "Confirm seed rules and crop insurance dates with the agriculture office before purchase."
+    }
+  ],
+  "financeRules": {
+    "firstSeasonBufferPercent": 15,
+    "homeInputSavingsNote": "Cost falls when manure, cow urine, crop residue, and seed are available on-farm.",
+    "decisionRule": "Keep one season of input buffer before expanding natural farming to all acres."
+  }
+}
