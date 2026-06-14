@@ -1,4 +1,29 @@
-const { sendJson, loadKnowledge, findDistrict } = require("../lib/shared");
+const { sendJson, loadKnowledge, findDistrict, fetchJsonWithTimeout } = require("../lib/shared");
+
+function fallbackWeatherData(district) {
+  return {
+    current: {
+      temperature_2m: 31,
+      relative_humidity_2m: 68,
+      precipitation: 0,
+      wind_speed_10m: 11
+    },
+    hourly: {
+      time: ["demo-now"],
+      temperature_2m: [31],
+      precipitation_probability: [35],
+      precipitation: [0.2],
+      wind_speed_10m: [11]
+    },
+    daily: {
+      time: [new Date().toISOString().slice(0, 10)],
+      precipitation_probability_max: [35],
+      precipitation_sum: [1.4],
+      wind_speed_10m_max: [16]
+    },
+    fallbackDistrict: district.name
+  };
+}
 
 function weatherCopy(language, rainProbability, rainSum) {
   const rainRisk = rainProbability > 40 || rainSum > 2;
@@ -89,16 +114,24 @@ module.exports = async function handler(req, res) {
   });
 
   try {
-    const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
-    const data = await response.json();
-    if (!response.ok) return sendJson(res, response.status, { error: "Open-Meteo request failed", detail: data });
+    const endpoint = `https://api.open-meteo.com/v1/forecast?${params.toString()}`;
+    const { response, data } = await fetchJsonWithTimeout(endpoint, {}, 10_000);
+    if (!response.ok) throw new Error(data.reason || data.error || `Open-Meteo HTTP ${response.status}`);
     return sendJson(res, 200, {
       source: "Open-Meteo",
-      endpoint: `https://api.open-meteo.com/v1/forecast?${params.toString()}`,
+      live: true,
+      endpoint,
       summary: summarizeWeather(data, district, language),
       raw: data
     });
   } catch (error) {
-    return sendJson(res, 500, { error: "Weather fetch failed", detail: error.message });
+    const data = fallbackWeatherData(district);
+    return sendJson(res, 200, {
+      source: "Open-Meteo fallback",
+      live: false,
+      warning: error.message,
+      summary: summarizeWeather(data, district, language),
+      raw: data
+    });
   }
 };

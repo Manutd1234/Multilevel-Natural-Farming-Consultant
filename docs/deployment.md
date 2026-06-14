@@ -28,8 +28,12 @@ Optional:
 
 ```bash
 GEMINI_MODEL=gemini-3.5-flash
+DATA_GOV_API_KEY=your_data_gov_india_key
+DATA_GOV_RESOURCE_ID=9ef84268-d588-465a-a308-a864a43d0070
 WHISPER_MODEL=openai/whisper-small
 ```
+
+`DATA_GOV_API_KEY` enables live Agmarknet mandi records through data.gov.in. If it is absent or the live API has no matching record, `/api/market` still returns the seeded demo mandi dataset with `live:false`.
 
 ## Local Model Download
 

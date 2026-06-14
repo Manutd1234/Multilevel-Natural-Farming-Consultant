@@ -285,16 +285,49 @@ button {
   resize: vertical;
 }
 
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-  gap: 1rem;
-}
-
 .tool-panel,
 .answer-panel {
   padding: clamp(1rem, 3vw, 1.35rem);
   box-shadow: 0 10px 24px rgba(36, 43, 39, 0.06);
+}
+
+.module-tabs {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.tab-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  padding: 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 8px 20px rgba(36, 43, 39, 0.06);
+}
+
+.tab-button {
+  min-height: 3.1rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--leaf-deep);
+  background: transparent;
+  font-weight: 850;
+}
+
+.tab-button.is-active {
+  color: #fff;
+  border-color: var(--leaf-deep);
+  background: var(--leaf-deep);
+}
+
+.tab-panel {
+  display: block;
+}
+
+.tab-panel[hidden] {
+  display: none;
 }
 
 .panel-head {
@@ -452,7 +485,7 @@ button {
 
 @media (max-width: 900px) {
   .hero-panel,
-  .dashboard-grid {
+  .tab-list {
     grid-template-columns: 1fr;
   }
 

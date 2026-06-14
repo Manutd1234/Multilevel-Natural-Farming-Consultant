@@ -42,7 +42,11 @@ async function serveApi(req, res) {
     res.writeHead(404, { "Content-Type": "application/json" });
     return res.end(JSON.stringify({ error: "API route not found" }));
   }
-  delete require.cache[require.resolve(filePath)];
+  for (const cachedPath of Object.keys(require.cache)) {
+    if (cachedPath.startsWith(path.join(root, "api")) || cachedPath.startsWith(path.join(root, "lib"))) {
+      delete require.cache[cachedPath];
+    }
+  }
   const handler = require(filePath);
   await handler(req, res);
 }

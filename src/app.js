@@ -12,7 +12,8 @@ const state = {
   chunks: [],
   speakingText: "",
   advisorRequestId: 0,
-  diseaseRequestId: 0
+  diseaseRequestId: 0,
+  activeTab: "module-one"
 };
 
 const FALLBACK_DISTRICTS = [
@@ -151,6 +152,10 @@ const dom = {
   queryInput: document.querySelector("#queryInput"),
   askButton: document.querySelector("#askButton"),
   quickGrid: document.querySelector("#quickGrid"),
+  moduleTabs: document.querySelectorAll("[data-tab]"),
+  modulePanels: document.querySelectorAll("[data-tab-panel]"),
+  moduleOneTab: document.querySelector("#moduleOneTab"),
+  moduleTwoTab: document.querySelector("#moduleTwoTab"),
   refreshSignals: document.querySelector("#refreshSignals"),
   signalGrid: document.querySelector("#signalGrid"),
   heroTitle: document.querySelector("#hero-title"),
@@ -202,6 +207,8 @@ const COPY = {
     area: "Area",
     moduleOne: "Module 1",
     moduleTwo: "Module 2",
+    moduleOneTab: "Module 1: Weather & Market",
+    moduleTwoTab: "Module 2: Disease Treatment",
     signalsTitle: "Weather & Market Intelligence",
     diseaseTitle: "Disease Identification & Organic Treatment",
     cropPhoto: "Crop photo",
@@ -269,6 +276,8 @@ const COPY = {
     area: "क्षेत्रफल",
     moduleOne: "मॉड्यूल 1",
     moduleTwo: "मॉड्यूल 2",
+    moduleOneTab: "मॉड्यूल 1: मौसम और मंडी",
+    moduleTwoTab: "मॉड्यूल 2: रोग उपचार",
     signalsTitle: "मौसम और मंडी जानकारी",
     diseaseTitle: "रोग पहचान और जैविक उपचार",
     cropPhoto: "फसल फोटो",
@@ -336,6 +345,8 @@ const COPY = {
     area: "Area",
     moduleOne: "Module 1",
     moduleTwo: "Module 2",
+    moduleOneTab: "Module 1: Weather & Market",
+    moduleTwoTab: "Module 2: Disease Treatment",
     signalsTitle: "Weather & Market Intelligence",
     diseaseTitle: "Disease Identification & Organic Treatment",
     cropPhoto: "Crop photo",
@@ -437,6 +448,9 @@ function bindEvents() {
   });
   dom.unitSelect.addEventListener("change", () => state.unit = dom.unitSelect.value);
   dom.areaInput.addEventListener("input", () => state.area = Number(dom.areaInput.value) || 1);
+  dom.moduleTabs.forEach((button) => {
+    button.addEventListener("click", () => switchTab(button.dataset.tab));
+  });
   dom.askButton.addEventListener("click", askAdvisor);
   dom.queryInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") askAdvisor();
@@ -482,6 +496,8 @@ function applyLanguage({ resetQuery = false } = {}) {
   dom.areaLabel.textContent = t("area");
   dom.moduleOneLabel.textContent = t("moduleOne");
   dom.moduleTwoLabel.textContent = t("moduleTwo");
+  dom.moduleOneTab.textContent = t("moduleOneTab");
+  dom.moduleTwoTab.textContent = t("moduleTwoTab");
   dom.signalsTitle.textContent = t("signalsTitle");
   dom.diseaseTitle.textContent = t("diseaseTitle");
   dom.cropPhotoLabel.textContent = t("cropPhoto");
@@ -511,8 +527,24 @@ function renderQuickPrompts() {
     const button = event.target.closest("[data-prompt]");
     if (!button) return;
     dom.queryInput.value = button.dataset.prompt;
+    if (/disease|spots|leaf|leaves|रोग|पत्त|धब्ब/i.test(button.dataset.prompt)) switchTab("module-two");
+    else switchTab("module-one");
     askAdvisor();
   };
+}
+
+function switchTab(tabId) {
+  state.activeTab = tabId || "module-one";
+  dom.moduleTabs.forEach((button) => {
+    const isActive = button.dataset.tab === state.activeTab;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-selected", String(isActive));
+  });
+  dom.modulePanels.forEach((panel) => {
+    const isActive = panel.dataset.tabPanel === state.activeTab;
+    panel.classList.toggle("is-active", isActive);
+    panel.hidden = !isActive;
+  });
 }
 
 async function refreshSignals() {
@@ -527,17 +559,20 @@ async function refreshSignals() {
 function renderSignals(weather, market) {
   const weatherSummary = weather.summary || {};
   const marketSummary = market.summary || {};
+  const weatherSource = weather.live === false ? `${weather.source || t("openMeteoUnavailable")}: ${weather.warning || t("openMeteoUnavailable")}` : weather.source || "Open-Meteo";
+  const marketSource = market.live === false ? `${market.source || t("marketUnavailable")}: ${market.warning || marketSummary.warning || t("marketUnavailable")}` : market.source || marketSummary.source || "Market API";
   dom.signalGrid.innerHTML = `
     <section class="signal-card">
       <h3>${escapeHtml(t("weather"))}</h3>
       <p class="metric">${weatherSummary.rainProbability ?? "--"}% ${escapeHtml(t("rain"))}</p>
       <p>${escapeHtml(weatherSummary.sprayWindow || weather.error || t("openMeteoUnavailable"))}</p>
-      <span>${escapeHtml(weather.source || "Open-Meteo")}</span>
+      <span>${escapeHtml(weatherSource)}</span>
     </section>
     <section class="signal-card">
       <h3>${escapeHtml(t("mandi"))}</h3>
       <p class="metric">₹${marketSummary.latestPrice ?? "--"}</p>
       <p>${escapeHtml(marketSummary.voiceResponse || market.error || t("marketUnavailable"))}</p>
+      <span>${escapeHtml(marketSource)}</span>
       <canvas class="sparkline" width="260" height="58" data-history="${escapeHtml(JSON.stringify(marketSummary.history || []))}"></canvas>
     </section>
   `;

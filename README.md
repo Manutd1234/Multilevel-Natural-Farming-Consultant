@@ -7,6 +7,7 @@ This is a complete rebuild around the supplied A-standard plan, adapted to the r
 - **LLM/Vision:** Gemini API through Vercel Functions
 - **STT:** Hugging Face Whisper (`openai/whisper-small`) through `/api/transcribe`
 - **Weather:** Open-Meteo Forecast API
+- **Market:** data.gov.in Agmarknet live route with seeded fallback
 - **Frontend:** Vercel-hosted mobile web UI with large voice/image controls
 - **Guardrails/RAG:** local JSON/JSONL natural farming knowledge base
 
@@ -14,7 +15,8 @@ This is a complete rebuild around the supplied A-standard plan, adapted to the r
 
 1. **Weather & Market Intelligence**
    - Open-Meteo forecast by district coordinates
-   - seeded mandi fallback dataset with 7-day sparkline
+   - data.gov.in Agmarknet live mandi lookup with seeded fallback dataset
+   - 7-day sparkline and sell/hold/wait signal
    - Gemini synthesis for sell/hold/wait advisory
 
 2. **Disease Identification & Treatment**
@@ -50,12 +52,15 @@ Optional:
 
 ```bash
 GEMINI_MODEL=gemini-3.5-flash
+DATA_GOV_API_KEY=your_data_gov_india_key
+DATA_GOV_RESOURCE_ID=9ef84268-d588-465a-a308-a864a43d0070
 HF_TOKEN=your_hugging_face_token
 WHISPER_MODEL=openai/whisper-small
 WHISPER_ENDPOINT_URL=https://your-custom-whisper-endpoint
 ```
 
 `HF_TOKEN` enables the Hugging Face Inference API route. `WHISPER_ENDPOINT_URL` is preferred if you host a downloaded Whisper model on Hugging Face Spaces or another GPU/CPU endpoint.
+`DATA_GOV_API_KEY` enables live mandi prices; the app falls back to seeded mandi data when live records are unavailable.
 
 ## Download Whisper From Hugging Face
 
@@ -95,7 +100,7 @@ which proxies to Open-Meteo with current, hourly, and daily variables.
 api/
   advisor.js       Gemini grounded advisor route
   disease.js       Gemini image/text disease triage
-  market.js        seeded mandi fallback analysis
+  market.js        data.gov.in Agmarknet lookup + seeded mandi fallback
   transcribe.js    Hugging Face Whisper route
   weather.js       Open-Meteo wrapper
 knowledge_base/
@@ -118,7 +123,8 @@ src/
 1. Import this GitHub repo in Vercel.
 2. Set `GEMINI_API_KEY` in Vercel Project Settings → Environment Variables.
 3. Set either `HF_TOKEN` or `WHISPER_ENDPOINT_URL` for the Whisper route.
-4. Deploy `main`.
+4. Optionally set `DATA_GOV_API_KEY` for live mandi prices.
+5. Deploy `main`.
 
 No build step is required.
 
