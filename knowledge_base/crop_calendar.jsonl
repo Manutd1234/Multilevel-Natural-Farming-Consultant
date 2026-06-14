@@ -2,4 +2,5 @@
 {"cropId":"bajra","season":"kharif","sowingWindow":"Sow after useful monsoon rain when soil moisture is adequate.","marketNote":"Good drought-tolerant option for light soils.","unit":"quintal"}
 {"cropId":"moong","season":"kharif/zaid","sowingWindow":"Use short-duration varieties where monsoon window is uncertain.","marketNote":"Pulse prices move with quality and moisture.","unit":"quintal"}
 {"cropId":"mustard","season":"rabi","sowingWindow":"Line sowing with low seed rate; avoid waterlogging.","marketNote":"Oilseed price depends on processor demand and imports.","unit":"quintal"}
+{"cropId":"potato","season":"rabi","sowingWindow":"Use disease-free seed tubers and avoid waterlogging; follow local cold-storage and variety guidance.","marketNote":"High storage risk without cold storage; compare local mandi price with storage cost before holding.","unit":"quintal"}
 {"cropId":"general","season":"all","sowingWindow":"Check rainfall, soil moisture, and seed quality before sowing.","marketNote":"Always verify current mandi price before selling.","unit":"quintal"}

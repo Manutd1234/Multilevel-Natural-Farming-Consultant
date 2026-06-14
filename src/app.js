@@ -10,7 +10,9 @@ const state = {
   lastSignals: null,
   mediaRecorder: null,
   chunks: [],
-  speakingText: ""
+  speakingText: "",
+  advisorRequestId: 0,
+  diseaseRequestId: 0
 };
 
 const FALLBACK_DISTRICTS = [
@@ -104,6 +106,27 @@ const FALLBACK_MARKET = {
             { date: "2026-06-12", modal: 5400 },
             { date: "2026-06-13", modal: 5420 },
             { date: "2026-06-14", modal: 5430 }
+          ]
+        }
+      ]
+    },
+    {
+      id: "potato",
+      name: "Potato / Aloo",
+      unit: "quintal",
+      storageRisk: "high",
+      markets: [
+        {
+          districtId: "hisar",
+          name: "Hisar",
+          history: [
+            { date: "2026-06-08", modal: 1320 },
+            { date: "2026-06-09", modal: 1300 },
+            { date: "2026-06-10", modal: 1280 },
+            { date: "2026-06-11", modal: 1250 },
+            { date: "2026-06-12", modal: 1230 },
+            { date: "2026-06-13", modal: 1210 },
+            { date: "2026-06-14", modal: 1190 }
           ]
         }
       ]
@@ -452,7 +475,7 @@ function applyLanguage({ resetQuery = false } = {}) {
   dom.recordStatus.textContent = t("recordStatus");
   dom.queryInput.placeholder = t("queryPlaceholder");
   if (resetQuery) dom.queryInput.value = t("defaultQuery");
-  dom.askButton.lastChild.textContent = ` ${t("ask")}`;
+  setButtonLabel(dom.askButton, t("ask"));
   dom.districtLabel.textContent = t("district");
   dom.cropLabel.textContent = t("crop");
   dom.unitLabel.textContent = t("landUnit");
@@ -469,7 +492,7 @@ function applyLanguage({ resetQuery = false } = {}) {
   }
   dom.symptomLabel.textContent = t("symptoms");
   dom.symptomInput.placeholder = t("symptomsPlaceholder");
-  dom.diseaseButton.lastChild.textContent = ` ${t("analyzeDisease")}`;
+  setButtonLabel(dom.diseaseButton, t("analyzeDisease"));
   dom.answerEyebrow.textContent = t("answerEyebrow");
   dom.answerTitle.textContent = t("answerTitle");
   if (!state.speakingText) dom.answerText.textContent = t("emptyAnswer");
@@ -522,6 +545,7 @@ function renderSignals(weather, market) {
 }
 
 async function askAdvisor() {
+  const requestId = ++state.advisorRequestId;
   setBusy(dom.askButton, true, t("thinking"));
   try {
     const payload = await fetchJson("/api/advisor", {
@@ -529,11 +553,13 @@ async function askAdvisor() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(buildContext({ query: dom.queryInput.value.trim() }))
     });
+    if (requestId !== state.advisorRequestId) return;
     renderAdvisorResult(payload.result, payload.modelBacked ? t("geminiRag") : t("localFallback"));
   } catch (error) {
+    if (requestId !== state.advisorRequestId) return;
     renderError(error.message);
   } finally {
-    setBusy(dom.askButton, false, t("ask"));
+    if (requestId === state.advisorRequestId) setBusy(dom.askButton, false, t("ask"));
   }
 }
 
@@ -566,6 +592,7 @@ async function analyzeDisease() {
     renderError(t("addSymptoms"));
     return;
   }
+  const requestId = ++state.diseaseRequestId;
   setBusy(dom.diseaseButton, true, t("analyzing"));
   try {
     const crop = selectedCrop();
@@ -581,11 +608,13 @@ async function analyzeDisease() {
         image: state.image
       })
     });
+    if (requestId !== state.diseaseRequestId) return;
     renderDiseaseResult(payload.result, payload.modelBacked ? t("geminiDisease") : t("diseaseFallback"));
   } catch (error) {
+    if (requestId !== state.diseaseRequestId) return;
     renderError(error.message);
   } finally {
-    setBusy(dom.diseaseButton, false, t("analyzeDisease"));
+    if (requestId === state.diseaseRequestId) setBusy(dom.diseaseButton, false, t("analyzeDisease"));
   }
 }
 
@@ -702,7 +731,9 @@ function buildContext(extra = {}) {
     cropId: state.cropId,
     language: state.language,
     unit: state.unit,
-    area: state.area
+    area: state.area,
+    weatherSummary: state.lastSignals?.weather?.summary || null,
+    marketSummary: state.lastSignals?.market?.summary || null
   };
 }
 
@@ -724,7 +755,14 @@ function blobToBase64(blob) {
 
 function setBusy(button, busy, text) {
   button.disabled = busy;
-  button.textContent = text;
+  setButtonLabel(button, text);
+}
+
+function setButtonLabel(button, text) {
+  Array.from(button.childNodes)
+    .filter((node) => node.nodeType === 3)
+    .forEach((node) => node.remove());
+  button.append(document.createTextNode(` ${text}`));
 }
 
 function listItems(items = []) {

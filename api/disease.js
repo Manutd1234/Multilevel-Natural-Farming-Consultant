@@ -94,7 +94,7 @@ Return strict JSON matching schema.`;
       result
     });
   } catch (error) {
-    return sendJson(res, error.code === "MISSING_GEMINI_API_KEY" ? 200 : error.statusCode || 500, {
+    return sendJson(res, 200, {
       source: "Local organic KB fallback",
       modelBacked: false,
       warning: error.message,

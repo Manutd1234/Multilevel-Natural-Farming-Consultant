@@ -69,6 +69,23 @@
           { "date": "2026-06-14", "modal": 5430 }
         ] }
       ]
+    },
+    {
+      "id": "potato",
+      "name": "Potato / Aloo",
+      "unit": "quintal",
+      "storageRisk": "high",
+      "markets": [
+        { "districtId": "hisar", "name": "Hisar", "history": [
+          { "date": "2026-06-08", "modal": 1320 },
+          { "date": "2026-06-09", "modal": 1300 },
+          { "date": "2026-06-10", "modal": 1280 },
+          { "date": "2026-06-11", "modal": 1250 },
+          { "date": "2026-06-12", "modal": 1230 },
+          { "date": "2026-06-13", "modal": 1210 },
+          { "date": "2026-06-14", "modal": 1190 }
+        ] }
+      ]
     }
   ]
 }
