@@ -20,6 +20,29 @@ function localDiseaseFallback(payload, knowledge) {
   const match = knowledge.diseases.find((item) =>
     item.symptoms.some((symptom) => text.includes(symptom.toLowerCase().split(" ")[0]))
   ) || knowledge.diseases[0];
+  const language = payload.language || "hinglish";
+  const voiceResponses = {
+    en: `There may be ${match.name}, but confidence is low. Follow organic steps and confirm with KVK.`,
+    hi: `${match.name} का संदेह है, लेकिन confidence low है। जैविक steps follow करें और KVK से confirm करें।`,
+    hinglish: `${match.name} ka doubt hai, par confidence low hai. Organic steps follow karein aur KVK se confirm karein.`
+  };
+  const escalation = {
+    en: [
+      "Issue spreads quickly across rows",
+      "Plant wilts, rots, or dies",
+      "Farmer cannot identify pest/disease from leaf top and underside"
+    ],
+    hi: [
+      "समस्या rows में जल्दी फैलती है",
+      "पौधा मुरझाता, सड़ता या मरता है",
+      "पत्ती के ऊपर और नीचे देखकर pest/disease identify नहीं हो रहा"
+    ],
+    hinglish: [
+      "Issue rows mein jaldi spread ho",
+      "Plant wilt, rot, ya die ho",
+      "Leaf ke top aur underside se pest/disease identify na ho"
+    ]
+  };
 
   return {
     possible_issue: match.name,
@@ -27,13 +50,9 @@ function localDiseaseFallback(payload, knowledge) {
     visual_signs: match.symptoms,
     organic_treatment: match.organicTreatment,
     prevention: match.prevention,
-    escalation: [
-      "Issue spreads quickly across rows",
-      "Plant wilts, rots, or dies",
-      "Farmer cannot identify pest/disease from leaf top and underside"
-    ],
-    voice_response: `${match.name} ka doubt hai, par confidence low hai. Organic steps follow karein aur KVK se confirm karein.`,
-    safety_note: safetyNote(payload.language)
+    escalation: escalation[language] || escalation.hinglish,
+    voice_response: voiceResponses[language] || voiceResponses.hinglish,
+    safety_note: safetyNote(language)
   };
 }
 

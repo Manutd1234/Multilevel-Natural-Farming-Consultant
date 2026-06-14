@@ -29,18 +29,46 @@ function fallbackAdvisor(payload, knowledge) {
   const cropMarket = findCropMarket(knowledge, payload.cropId);
   const priceInfo = getLatestPrice(cropMarket, district.id);
   const trend = calcTrend(priceInfo);
+  const language = payload.language || "hinglish";
+  const responses = {
+    en: {
+      voice_response: `For ${district.name}, the ${cropMarket.name} market signal is ${trend.signal}. Price is about ₹${priceInfo.latest.modal}/${cropMarket.unit}. For natural farming, follow neem, jeevamrit, crop rotation, and KVK confirmation.`,
+      remedy_steps: [
+        "Keep crop and symptoms clear; upload a photo in the disease module if available.",
+        "Verify the mandi rate with the local mandi, eNAM, or Agmarknet.",
+        "Postpone spray when rain chance is high."
+      ],
+      weather_alert: "Weather details need Open-Meteo fetch."
+    },
+    hi: {
+      voice_response: `${district.name} के लिए ${cropMarket.name} का मंडी signal ${trend.signal} है। भाव लगभग ₹${priceInfo.latest.modal}/${cropMarket.unit} है। प्राकृतिक खेती के लिए नीम, जीवामृत, crop rotation और KVK confirmation follow करें।`,
+      remedy_steps: [
+        "फसल और लक्षण साफ रखें; photo हो तो disease module में upload करें।",
+        "मंडी भाव local mandi/eNAM/Agmarknet से verify करें।",
+        "बारिश की संभावना ज्यादा हो तो spray postpone करें।"
+      ],
+      weather_alert: "मौसम details के लिए Open-Meteo fetch चाहिए।"
+    },
+    hinglish: {
+      voice_response: `${district.name} ke liye ${cropMarket.name} ka mandi signal ${trend.signal} hai. Bhav ₹${priceInfo.latest.modal}/${cropMarket.unit} hai. Natural farming ke liye neem, jeevamrit, crop rotation aur KVK confirmation follow karein.`,
+      remedy_steps: [
+        "Crop aur symptom clear rakhein; photo ho to disease module mein upload karein.",
+        "Mandi rate ko local mandi/eNAM/Agmarknet se verify karein.",
+        "Rain chance high ho to spray postpone karein."
+      ],
+      weather_alert: "Weather details need Open-Meteo fetch."
+    }
+  };
+  const response = responses[language] || responses.hinglish;
+
   return {
-    voice_response: `${district.name} ke liye ${cropMarket.name} ka mandi signal ${trend.signal} hai. Bhav ₹${priceInfo.latest.modal}/${cropMarket.unit} hai. Natural farming ke liye neem, jeevamrit, crop rotation aur KVK confirmation follow karein.`,
-    remedy_steps: [
-      "Crop aur symptom clear rakhein; photo ho to disease module mein upload karein.",
-      "Mandi rate ko local mandi/eNAM/Agmarknet se verify karein.",
-      "Rain chance high ho to spray postpone karein."
-    ],
+    voice_response: response.voice_response,
+    remedy_steps: response.remedy_steps,
     confidence: 0.62,
     market_signal: trend.signal,
-    weather_alert: "Weather details need Open-Meteo fetch.",
+    weather_alert: response.weather_alert,
     source_notes: ["Seeded mandi dataset", "Local natural farming JSONL"],
-    safety_note: safetyNote(payload.language)
+    safety_note: safetyNote(language)
   };
 }
 

@@ -13,6 +13,104 @@ const state = {
   speakingText: ""
 };
 
+const FALLBACK_DISTRICTS = [
+  { id: "hisar", name: "Hisar", state: "Haryana", latitude: 29.1492, longitude: 75.7217, nearestMandi: "Hisar" },
+  { id: "karnal", name: "Karnal", state: "Haryana", latitude: 29.6857, longitude: 76.9905, nearestMandi: "Karnal" },
+  { id: "sirsa", name: "Sirsa", state: "Haryana", latitude: 29.5336, longitude: 75.0177, nearestMandi: "Sirsa" },
+  { id: "sonipat", name: "Sonipat", state: "Haryana", latitude: 28.9931, longitude: 77.0151, nearestMandi: "Sonipat" }
+];
+
+const FALLBACK_MARKET = {
+  lastUpdated: "2026-06-14",
+  note: "Embedded fallback dataset for demo startup resilience.",
+  crops: [
+    {
+      id: "onion",
+      name: "Onion / Pyaaz",
+      unit: "quintal",
+      storageRisk: "high",
+      markets: [
+        {
+          districtId: "hisar",
+          name: "Hisar",
+          history: [
+            { date: "2026-06-08", modal: 1720 },
+            { date: "2026-06-09", modal: 1760 },
+            { date: "2026-06-10", modal: 1810 },
+            { date: "2026-06-11", modal: 1800 },
+            { date: "2026-06-12", modal: 1850 },
+            { date: "2026-06-13", modal: 1880 },
+            { date: "2026-06-14", modal: 1910 }
+          ]
+        }
+      ]
+    },
+    {
+      id: "bajra",
+      name: "Bajra / Pearl Millet",
+      unit: "quintal",
+      storageRisk: "medium",
+      markets: [
+        {
+          districtId: "hisar",
+          name: "Hisar",
+          history: [
+            { date: "2026-06-08", modal: 2240 },
+            { date: "2026-06-09", modal: 2260 },
+            { date: "2026-06-10", modal: 2250 },
+            { date: "2026-06-11", modal: 2280 },
+            { date: "2026-06-12", modal: 2290 },
+            { date: "2026-06-13", modal: 2300 },
+            { date: "2026-06-14", modal: 2310 }
+          ]
+        }
+      ]
+    },
+    {
+      id: "moong",
+      name: "Moong / Green Gram",
+      unit: "quintal",
+      storageRisk: "low",
+      markets: [
+        {
+          districtId: "hisar",
+          name: "Hisar",
+          history: [
+            { date: "2026-06-08", modal: 8400 },
+            { date: "2026-06-09", modal: 8350 },
+            { date: "2026-06-10", modal: 8280 },
+            { date: "2026-06-11", modal: 8220 },
+            { date: "2026-06-12", modal: 8180 },
+            { date: "2026-06-13", modal: 8100 },
+            { date: "2026-06-14", modal: 8050 }
+          ]
+        }
+      ]
+    },
+    {
+      id: "mustard",
+      name: "Mustard / Sarson",
+      unit: "quintal",
+      storageRisk: "medium",
+      markets: [
+        {
+          districtId: "hisar",
+          name: "Hisar",
+          history: [
+            { date: "2026-06-08", modal: 5350 },
+            { date: "2026-06-09", modal: 5360 },
+            { date: "2026-06-10", modal: 5380 },
+            { date: "2026-06-11", modal: 5370 },
+            { date: "2026-06-12", modal: 5400 },
+            { date: "2026-06-13", modal: 5420 },
+            { date: "2026-06-14", modal: 5430 }
+          ]
+        }
+      ]
+    }
+  ]
+};
+
 const dom = {
   language: document.querySelector("#language"),
   brandTagline: document.querySelector("#brandTagline"),
@@ -259,17 +357,29 @@ const COPY = {
   }
 };
 
-async function loadJson(path) {
-  const response = await fetch(path);
-  if (!response.ok) throw new Error(`Could not load ${path}`);
-  return response.json();
+function cloneFallback(value) {
+  if (typeof structuredClone === "function") return structuredClone(value);
+  return JSON.parse(JSON.stringify(value));
+}
+
+async function loadJson(path, fallback) {
+  try {
+    const response = await fetch(path, { cache: "no-store" });
+    if (!response.ok) throw new Error(`Could not load ${path}: ${response.status}`);
+    return response.json();
+  } catch (error) {
+    console.warn(`Using embedded fallback for ${path}`, error);
+    return cloneFallback(fallback);
+  }
 }
 
 async function boot() {
   [state.districts, state.market] = await Promise.all([
-    loadJson("knowledge_base/districts.json"),
-    loadJson("knowledge_base/market_fallback.json")
+    loadJson("/knowledge_base/districts.json", FALLBACK_DISTRICTS),
+    loadJson("/knowledge_base/market_fallback.json", FALLBACK_MARKET)
   ]);
+  if (!Array.isArray(state.districts) || !state.districts.length) state.districts = cloneFallback(FALLBACK_DISTRICTS);
+  if (!Array.isArray(state.market?.crops) || !state.market.crops.length) state.market = cloneFallback(FALLBACK_MARKET);
   populateControls();
   bindEvents();
   applyLanguage({ resetQuery: true });
@@ -292,7 +402,7 @@ function bindEvents() {
     const shouldResetQuery = shouldReplaceQuery();
     state.language = dom.language.value;
     applyLanguage({ resetQuery: shouldResetQuery });
-    if (state.lastSignals) renderSignals(state.lastSignals.weather, state.lastSignals.market);
+    refreshSignals();
   });
   dom.districtSelect.addEventListener("change", () => {
     state.districtId = dom.districtSelect.value;
@@ -374,17 +484,18 @@ function renderQuickPrompts() {
   dom.quickGrid.innerHTML = t("quickPrompts").map((prompt) =>
     `<button class="chip" type="button" data-prompt="${escapeHtml(prompt)}">${escapeHtml(prompt)}</button>`
   ).join("");
-  dom.quickGrid.addEventListener("click", (event) => {
+  dom.quickGrid.onclick = (event) => {
     const button = event.target.closest("[data-prompt]");
     if (!button) return;
     dom.queryInput.value = button.dataset.prompt;
     askAdvisor();
-  });
+  };
 }
 
 async function refreshSignals() {
-  const weatherPromise = fetchJson(`/api/weather?district=${encodeURIComponent(state.districtId)}`).catch((error) => ({ error: error.message }));
-  const marketPromise = fetchJson(`/api/market?district=${encodeURIComponent(state.districtId)}&crop=${encodeURIComponent(state.cropId)}`).catch((error) => ({ error: error.message }));
+  const languageParam = encodeURIComponent(state.language);
+  const weatherPromise = fetchJson(`/api/weather?district=${encodeURIComponent(state.districtId)}&language=${languageParam}`).catch((error) => ({ error: error.message }));
+  const marketPromise = fetchJson(`/api/market?district=${encodeURIComponent(state.districtId)}&crop=${encodeURIComponent(state.cropId)}&language=${languageParam}`).catch((error) => ({ error: error.message }));
   const [weather, market] = await Promise.all([weatherPromise, marketPromise]);
   state.lastSignals = { weather, market };
   renderSignals(weather, market);
@@ -418,7 +529,7 @@ async function askAdvisor() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(buildContext({ query: dom.queryInput.value.trim() }))
     });
-    renderAdvisorResult(payload.result, payload.modelBacked ? t("geminiRag") : payload.warning || t("localFallback"));
+    renderAdvisorResult(payload.result, payload.modelBacked ? t("geminiRag") : t("localFallback"));
   } catch (error) {
     renderError(error.message);
   } finally {
@@ -470,7 +581,7 @@ async function analyzeDisease() {
         image: state.image
       })
     });
-    renderDiseaseResult(payload.result, payload.modelBacked ? t("geminiDisease") : payload.warning || t("diseaseFallback"));
+    renderDiseaseResult(payload.result, payload.modelBacked ? t("geminiDisease") : t("diseaseFallback"));
   } catch (error) {
     renderError(error.message);
   } finally {
