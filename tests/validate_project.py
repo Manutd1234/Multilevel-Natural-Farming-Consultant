@@ -7,90 +7,84 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def load_json(relative: str) -> dict:
-    path = ROOT / relative
-    assert path.exists(), f"Missing {relative}"
-    return json.loads(path.read_text(encoding="utf-8"))
+def read_json(relative: str):
+    return json.loads((ROOT / relative).read_text(encoding="utf-8"))
+
+
+def read_jsonl(relative: str):
+    return [
+        json.loads(line)
+        for line in (ROOT / relative).read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
 
 
 def test_required_files_exist() -> None:
     required = [
         "index.html",
         "src/app.js",
-        "src/advisor.js",
         "src/styles.css",
-        "data/market-signals.json",
-        "data/seed-finance.json",
-        "data/disease-knowledge.json",
-        "data/knowledge-base.json",
+        "api/advisor.js",
         "api/disease.js",
-        "docs/market-analysis.md",
-        "docs/model-analysis.md",
-        "docs/prompt-design.md",
-        "docs/disease-treatment.md",
-        "docs/demo-script.md",
+        "api/market.js",
+        "api/transcribe.js",
+        "api/weather.js",
+        "lib/shared.js",
+        "knowledge_base/districts.json",
+        "knowledge_base/market_fallback.json",
+        "knowledge_base/diseases.jsonl",
+        "knowledge_base/zbnf_practices.jsonl",
+        "knowledge_base/crop_calendar.jsonl",
+        "scripts/download-whisper.mjs",
+        "scripts/dev-server.mjs",
         "README.md",
+        "docs/architecture.md",
+        "docs/prompt-guardrails.md",
+        "docs/demo-script.md",
+        "docs/deployment.md",
         "vercel.json",
     ]
     missing = [path for path in required if not (ROOT / path).exists()]
-    assert not missing, f"Missing files: {missing}"
+    assert not missing, missing
 
 
-def test_market_data_has_core_entities() -> None:
-    data = load_json("data/market-signals.json")
-    crop_ids = {crop["id"] for crop in data["crops"]}
-    district_ids = {district["id"] for district in data["districts"]}
-    assert {"wheat", "bajra", "moong"}.issubset(crop_ids)
-    assert {"hisar", "karnal", "sirsa"}.issubset(district_ids)
-    for crop in data["crops"]:
-        band = crop["priceBand"]
-        assert band["low"] <= band["modal"] <= band["high"], crop["id"]
-        assert crop["aliases"], crop["id"]
+def test_knowledge_base_is_parseable() -> None:
+    districts = read_json("knowledge_base/districts.json")
+    market = read_json("knowledge_base/market_fallback.json")
+    diseases = read_jsonl("knowledge_base/diseases.jsonl")
+    zbnf = read_jsonl("knowledge_base/zbnf_practices.jsonl")
+    calendar = read_jsonl("knowledge_base/crop_calendar.jsonl")
+    assert {"hisar", "karnal"}.issubset({item["id"] for item in districts})
+    assert {"onion", "bajra", "moong"}.issubset({item["id"] for item in market["crops"]})
+    assert all(item["organicTreatment"] for item in diseases)
+    assert all("guardrail" in item for item in zbnf)
+    assert any(item["cropId"] == "general" for item in calendar)
 
 
-def test_seed_finance_matches_market_crops() -> None:
-    market = load_json("data/market-signals.json")
-    finance = load_json("data/seed-finance.json")
-    crop_ids = {crop["id"] for crop in market["crops"]}
-    finance_ids = {item["cropId"] for item in finance["guidance"]}
-    assert crop_ids.issubset(finance_ids)
-    for item in finance["guidance"]:
-        assert item["seedRateKgPerAcre"] > 0
-        assert item["seedCostPerKg"]["low"] <= item["seedCostPerKg"]["high"]
-        assert item["naturalInputsPerAcre"]["low"] <= item["naturalInputsPerAcre"]["high"]
+def test_api_guardrails_and_integrations_are_present() -> None:
+    shared = (ROOT / "lib/shared.js").read_text(encoding="utf-8")
+    disease = (ROOT / "api/disease.js").read_text(encoding="utf-8")
+    transcribe = (ROOT / "api/transcribe.js").read_text(encoding="utf-8")
+    weather = (ROOT / "api/weather.js").read_text(encoding="utf-8")
+    assert "GEMINI_API_KEY" in shared
+    assert "responseFormat" in shared
+    assert "inline_data" in disease
+    assert "synthetic chemical pesticides" in disease
+    assert "api-inference.huggingface.co" in transcribe
+    assert "openai/whisper-small" in transcribe
+    assert "api.open-meteo.com/v1/forecast" in weather
 
 
-def test_guardrails_include_market_verification() -> None:
-    kb = load_json("data/knowledge-base.json")
-    joined = " ".join(kb["systemGuardrails"]).lower()
-    assert "demo market prices" in joined
-    assert "local agriculture officer" in joined
-    assert all(note for note in kb["safetyNotes"].values())
-
-
-def test_disease_feature_has_guardrails() -> None:
-    disease = load_json("data/disease-knowledge.json")
-    assert disease["commonIssues"], "Disease knowledge must include common issues"
-    assert "hinglish" in disease["safetyCopy"]
-    joined = " ".join(disease["organicPrinciples"]).lower()
-    assert "local agriculture officer" in joined
-    assert "unknown remedies" in joined
-
-
-def test_vercel_gemini_function_is_configured() -> None:
-    api_file = (ROOT / "api" / "disease.js").read_text(encoding="utf-8")
-    vercel = load_json("vercel.json")
-    assert "GEMINI_API_KEY" in api_file
-    assert "generativelanguage.googleapis.com" in api_file
-    assert "inline_data" in api_file
-    assert "api/disease.js" in vercel["functions"]
+def test_vercel_config_and_gitignore() -> None:
+    vercel = read_json("vercel.json")
+    gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
+    assert vercel["functions"]["api/*.js"]["maxDuration"] == 30
+    assert "models/" in gitignore
 
 
 if __name__ == "__main__":
     test_required_files_exist()
-    test_market_data_has_core_entities()
-    test_seed_finance_matches_market_crops()
-    test_guardrails_include_market_verification()
-    test_disease_feature_has_guardrails()
-    test_vercel_gemini_function_is_configured()
+    test_knowledge_base_is_parseable()
+    test_api_guardrails_and_integrations_are_present()
+    test_vercel_config_and_gitignore()
     print("Project validation passed")

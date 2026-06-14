@@ -1,14 +1,26 @@
-# Kheti Saathi
+# KisaanVaani
 
-Kheti Saathi is a voice-first Natural Farming Consultant prototype for Connecting Dreams Foundation Round 2, Option B.
+Voice-Based Natural Farming Consultant for Connecting Dreams Foundation Option B.
 
-Selected Option B requirements:
+This is a complete rebuild around the supplied A-standard plan, adapted to the requested deployment stack:
 
-- Weather & Market Intelligence
-- Seed & Financial Guidance
-- Disease Identification & Treatment
+- **LLM/Vision:** Gemini API through Vercel Functions
+- **STT:** Hugging Face Whisper (`openai/whisper-small`) through `/api/transcribe`
+- **Weather:** Open-Meteo Forecast API
+- **Frontend:** Vercel-hosted mobile web UI with large voice/image controls
+- **Guardrails/RAG:** local JSON/JSONL natural farming knowledge base
 
-The prototype is a static mobile web app with browser STT/TTS, demo mandi intelligence, Open-Meteo weather lookup, seed/cost calculations, Gemini-powered disease image triage, Hinglish/Hindi/English response modes, and strict prompt guardrails.
+## Chosen Modules
+
+1. **Weather & Market Intelligence**
+   - Open-Meteo forecast by district coordinates
+   - seeded mandi fallback dataset with 7-day sparkline
+   - Gemini synthesis for sell/hold/wait advisory
+
+2. **Disease Identification & Treatment**
+   - image + symptom text upload
+   - Gemini multimodal triage
+   - organic-only remedies and KVK escalation
 
 ## Run Locally
 
@@ -16,11 +28,19 @@ The prototype is a static mobile web app with browser STT/TTS, demo mandi intell
 python3 -m http.server 4173
 ```
 
-Open `http://localhost:4173`.
+Open [http://localhost:4173](http://localhost:4173).
 
-The app works with demo data if the weather API is unavailable. Voice recognition depends on browser support and microphone permission.
+For local API route testing without Vercel CLI:
 
-The disease feature calls `/api/disease`, which is designed for Vercel Functions. Local static serving can show the UI, but Gemini analysis needs a Vercel/serverless environment with:
+```bash
+node scripts/dev-server.mjs
+```
+
+Local static serving can test only the UI. The Node dev server can test the serverless API files too.
+
+## Environment Variables
+
+Required for Gemini-backed answers:
 
 ```bash
 GEMINI_API_KEY=your_google_ai_studio_key
@@ -30,72 +50,82 @@ Optional:
 
 ```bash
 GEMINI_MODEL=gemini-3.5-flash
+HF_TOKEN=your_hugging_face_token
+WHISPER_MODEL=openai/whisper-small
+WHISPER_ENDPOINT_URL=https://your-custom-whisper-endpoint
 ```
 
-## Project Plan
+`HF_TOKEN` enables the Hugging Face Inference API route. `WHISPER_ENDPOINT_URL` is preferred if you host a downloaded Whisper model on Hugging Face Spaces or another GPU/CPU endpoint.
 
-1. Extract Option B requirements from the assignment PDF.
-2. Run parallel agents for market analysis, model architecture, and voice-first UX/localization.
-3. Build a static mobile prototype with Web Speech API input/output.
-4. Add local market, seed, finance, and guardrail data.
-5. Document market analysis, model analysis, prompt design, and demo flow.
-6. Validate the files and test the browser experience locally.
+## Download Whisper From Hugging Face
 
-## Tech Stack
+The Vercel app keeps Whisper configuration separate from Git. To download Whisper artifacts locally:
 
-- Frontend: HTML, CSS, JavaScript modules
-- Voice input: Browser Web Speech API where available
-- Voice output: Browser SpeechSynthesis
-- Weather: Open-Meteo Forecast API with offline fallback
-- Market data: Prototype demo bands with links to Agmarknet/eNAM for production integration
-- AI layer: Retrieval-style deterministic advisor with strict guardrails in `src/advisor.js`
+```bash
+node scripts/download-whisper.mjs --model openai/whisper-small
+```
 
-## Why This Approach
+To also download large weights:
 
-Farmers need short, trusted, voice-first advice more than a complex dashboard. This build keeps the first screen centered on one action: speak or ask. The response engine retrieves only from curated local data and marks uncertain or demo values clearly, which lowers hallucination risk while still showing an AI-ready architecture.
+```bash
+node scripts/download-whisper.mjs --model openai/whisper-small --weights
+```
 
-## Files
+Downloaded files are stored under `models/` and ignored by Git.
 
-- `index.html` - app shell
-- `src/app.js` - UI, voice, weather fetch, rendering
-- `src/advisor.js` - guarded advisor logic
-- `data/market-signals.json` - district, crop, and demo market intelligence
-- `data/seed-finance.json` - seed rate, cost, rotation, subsidy notes
-- `data/disease-knowledge.json` - organic disease and pest triage guardrails
-- `data/knowledge-base.json` - guardrails, trusted sources, quick questions
-- `api/disease.js` - Vercel Function that calls Gemini with image/text inputs
-- `docs/market-analysis.md` - market and product analysis
-- `docs/model-analysis.md` - model, STT/TTS, RAG, and deployment analysis
-- `docs/prompt-design.md` - system prompt and response policy
-- `docs/disease-treatment.md` - Gemini disease triage design
-- `docs/demo-script.md` - three-minute walkthrough plan
-- `tests/validate_project.py` - lightweight project validation
-- `vercel.json` - Vercel function configuration
+## Open-Meteo Endpoint
 
-## Source Notes
+Correct URL format:
 
-This prototype uses current official or primary sources for architecture and data planning:
+```text
+https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&hourly=temperature_2m
+```
 
-- [Agmarknet](https://agmarknet.gov.in/)
-- [eNAM](https://www.enam.gov.in/)
+The app uses:
+
+```text
+/api/weather?district=hisar
+```
+
+which proxies to Open-Meteo with current, hourly, and daily variables.
+
+## File Structure
+
+```text
+api/
+  advisor.js       Gemini grounded advisor route
+  disease.js       Gemini image/text disease triage
+  market.js        seeded mandi fallback analysis
+  transcribe.js    Hugging Face Whisper route
+  weather.js       Open-Meteo wrapper
+knowledge_base/
+  crop_calendar.jsonl
+  diseases.jsonl
+  districts.json
+  market_fallback.json
+  zbnf_practices.jsonl
+lib/
+  shared.js
+scripts/
+  download-whisper.mjs
+src/
+  app.js
+  styles.css
+```
+
+## Deploy To Vercel
+
+1. Import this GitHub repo in Vercel.
+2. Set `GEMINI_API_KEY` in Vercel Project Settings → Environment Variables.
+3. Set either `HF_TOKEN` or `WHISPER_ENDPOINT_URL` for the Whisper route.
+4. Deploy `main`.
+
+No build step is required.
+
+## Sources
+
+- [Gemini image understanding](https://ai.google.dev/gemini-api/docs/image-understanding)
+- [Gemini structured outputs](https://ai.google.dev/gemini-api/docs/structured-output)
 - [Open-Meteo Forecast API](https://open-meteo.com/en/docs)
-- [India Meteorological Department](https://mausam.imd.gov.in/)
-- [National Mission on Natural Farming](https://naturalfarming.dac.gov.in/)
-- [MDN Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API)
-- [Gemini API image understanding](https://ai.google.dev/gemini-api/docs/image-understanding)
 - [Vercel Functions](https://vercel.com/docs/functions)
-
-## Vercel Deployment
-
-1. Import the GitHub repository into Vercel or run the Vercel CLI from the project root.
-2. Add `GEMINI_API_KEY` as a Production environment variable.
-3. Deploy to Production.
-4. Test the disease feature by uploading a leaf/crop photo and adding symptoms.
-
-## Production Next Steps
-
-- Replace demo mandi bands with Agmarknet/eNAM or state market data ingestion.
-- Add server-side STT/TTS and a low-latency LLM voice pipeline for better multilingual handling.
-- Add RAG over verified agronomy sources, crop calendars, soil health cards, and subsidy pages.
-- Add agronomist review workflow for high-risk disease, pest, and finance advice.
-- Add offline cache for the last weather, mandi, and seed recommendations.
+- [Hugging Face Whisper Small](https://huggingface.co/openai/whisper-small)

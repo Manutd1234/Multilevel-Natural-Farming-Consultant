@@ -1,0 +1,6 @@
+[
+  { "id": "hisar", "name": "Hisar", "state": "Haryana", "latitude": 29.1492, "longitude": 75.7217, "nearestMandi": "Hisar" },
+  { "id": "karnal", "name": "Karnal", "state": "Haryana", "latitude": 29.6857, "longitude": 76.9905, "nearestMandi": "Karnal" },
+  { "id": "sirsa", "name": "Sirsa", "state": "Haryana", "latitude": 29.5336, "longitude": 75.0177, "nearestMandi": "Sirsa" },
+  { "id": "sonipat", "name": "Sonipat", "state": "Haryana", "latitude": 28.9931, "longitude": 77.0151, "nearestMandi": "Sonipat" }
+]

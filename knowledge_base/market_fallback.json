@@ -1,0 +1,74 @@
+{
+  "lastUpdated": "2026-06-14",
+  "note": "Seeded fallback dataset for demo. Replace with Agmarknet/data.gov.in ingestion in production.",
+  "crops": [
+    {
+      "id": "onion",
+      "name": "Onion / Pyaaz",
+      "unit": "quintal",
+      "storageRisk": "high",
+      "markets": [
+        { "districtId": "hisar", "name": "Hisar", "history": [
+          { "date": "2026-06-08", "modal": 1720 },
+          { "date": "2026-06-09", "modal": 1760 },
+          { "date": "2026-06-10", "modal": 1810 },
+          { "date": "2026-06-11", "modal": 1800 },
+          { "date": "2026-06-12", "modal": 1850 },
+          { "date": "2026-06-13", "modal": 1880 },
+          { "date": "2026-06-14", "modal": 1910 }
+        ] }
+      ]
+    },
+    {
+      "id": "bajra",
+      "name": "Bajra / Pearl Millet",
+      "unit": "quintal",
+      "storageRisk": "medium",
+      "markets": [
+        { "districtId": "hisar", "name": "Hisar", "history": [
+          { "date": "2026-06-08", "modal": 2240 },
+          { "date": "2026-06-09", "modal": 2260 },
+          { "date": "2026-06-10", "modal": 2250 },
+          { "date": "2026-06-11", "modal": 2280 },
+          { "date": "2026-06-12", "modal": 2290 },
+          { "date": "2026-06-13", "modal": 2300 },
+          { "date": "2026-06-14", "modal": 2310 }
+        ] }
+      ]
+    },
+    {
+      "id": "moong",
+      "name": "Moong / Green Gram",
+      "unit": "quintal",
+      "storageRisk": "low",
+      "markets": [
+        { "districtId": "hisar", "name": "Hisar", "history": [
+          { "date": "2026-06-08", "modal": 8400 },
+          { "date": "2026-06-09", "modal": 8350 },
+          { "date": "2026-06-10", "modal": 8280 },
+          { "date": "2026-06-11", "modal": 8220 },
+          { "date": "2026-06-12", "modal": 8180 },
+          { "date": "2026-06-13", "modal": 8100 },
+          { "date": "2026-06-14", "modal": 8050 }
+        ] }
+      ]
+    },
+    {
+      "id": "mustard",
+      "name": "Mustard / Sarson",
+      "unit": "quintal",
+      "storageRisk": "medium",
+      "markets": [
+        { "districtId": "hisar", "name": "Hisar", "history": [
+          { "date": "2026-06-08", "modal": 5350 },
+          { "date": "2026-06-09", "modal": 5360 },
+          { "date": "2026-06-10", "modal": 5380 },
+          { "date": "2026-06-11", "modal": 5370 },
+          { "date": "2026-06-12", "modal": 5400 },
+          { "date": "2026-06-13", "modal": 5420 },
+          { "date": "2026-06-14", "modal": 5430 }
+        ] }
+      ]
+    }
+  ]
+}

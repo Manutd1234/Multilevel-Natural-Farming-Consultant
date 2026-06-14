@@ -1,18 +1,14 @@
-import { buildAdvice } from "./advisor.js";
-
 const state = {
-  marketData: null,
-  seedFinance: null,
-  knowledgeBase: null,
-  weather: null,
+  districts: [],
+  market: null,
   districtId: "hisar",
-  cropId: "bajra",
-  season: "kharif",
-  acres: 2,
-  lang: "hinglish",
-  lastAdvice: null,
-  diseaseImage: null,
-  recognition: null,
+  cropId: "onion",
+  language: "hinglish",
+  unit: "acre",
+  area: 2,
+  image: null,
+  mediaRecorder: null,
+  chunks: [],
   speakingText: ""
 };
 
@@ -20,26 +16,33 @@ const dom = {
   language: document.querySelector("#language"),
   districtSelect: document.querySelector("#districtSelect"),
   cropSelect: document.querySelector("#cropSelect"),
-  seasonSelect: document.querySelector("#seasonSelect"),
-  acreInput: document.querySelector("#acreInput"),
-  micButton: document.querySelector("#micButton"),
+  unitSelect: document.querySelector("#unitSelect"),
+  areaInput: document.querySelector("#areaInput"),
+  recordButton: document.querySelector("#recordButton"),
+  recordStatus: document.querySelector("#recordStatus"),
+  queryInput: document.querySelector("#queryInput"),
   askButton: document.querySelector("#askButton"),
-  replayButton: document.querySelector("#replayButton"),
-  questionInput: document.querySelector("#questionInput"),
-  signalGrid: document.querySelector("#signalGrid"),
-  answerText: document.querySelector("#answerText"),
-  stepList: document.querySelector("#stepList"),
-  sourceList: document.querySelector("#sourceList"),
   quickGrid: document.querySelector("#quickGrid"),
-  networkStatus: document.querySelector("#networkStatus"),
-  listeningStatus: document.querySelector("#listeningStatus"),
-  diseaseImage: document.querySelector("#diseaseImage"),
+  refreshSignals: document.querySelector("#refreshSignals"),
+  signalGrid: document.querySelector("#signalGrid"),
+  cropImage: document.querySelector("#cropImage"),
   imageLabel: document.querySelector("#imageLabel"),
   imagePreview: document.querySelector("#imagePreview"),
   symptomInput: document.querySelector("#symptomInput"),
   diseaseButton: document.querySelector("#diseaseButton"),
-  diseaseResult: document.querySelector("#diseaseResult")
+  replayButton: document.querySelector("#replayButton"),
+  answerText: document.querySelector("#answerText"),
+  resultGrid: document.querySelector("#resultGrid"),
+  safetyLine: document.querySelector("#safetyLine"),
+  serviceStatus: document.querySelector("#serviceStatus")
 };
+
+const quickPrompts = [
+  "Kya abhi pyaaz bechna chahiye?",
+  "Kal barish hogi kya? Neem spray kab karun?",
+  "Mere patton par brown spots hain, organic ilaaj batao.",
+  "Moong ka bhav gir raha hai ya badh raha hai?"
+];
 
 async function loadJson(path) {
   const response = await fetch(path);
@@ -48,240 +51,123 @@ async function loadJson(path) {
 }
 
 async function boot() {
-  [state.marketData, state.seedFinance, state.knowledgeBase] = await Promise.all([
-    loadJson("data/market-signals.json"),
-    loadJson("data/seed-finance.json"),
-    loadJson("data/knowledge-base.json")
+  [state.districts, state.market] = await Promise.all([
+    loadJson("knowledge_base/districts.json"),
+    loadJson("knowledge_base/market_fallback.json")
   ]);
-
   populateControls();
   bindEvents();
-  setupSpeech();
-  renderQuickQuestions();
-  ask(dom.questionInput.value);
-  refreshWeather().then(() => ask(dom.questionInput.value));
+  renderQuickPrompts();
+  await refreshSignals();
 }
 
 function populateControls() {
-  dom.districtSelect.innerHTML = state.marketData.districts
-    .map((district) => `<option value="${district.id}">${district.name}</option>`)
-    .join("");
-  dom.cropSelect.innerHTML = state.marketData.crops
-    .map((crop) => `<option value="${crop.id}">${crop.name} / ${crop.hindiName}</option>`)
-    .join("");
+  dom.districtSelect.innerHTML = state.districts.map((district) =>
+    `<option value="${district.id}">${district.name}</option>`
+  ).join("");
+  dom.cropSelect.innerHTML = state.market.crops.map((crop) =>
+    `<option value="${crop.id}">${crop.name}</option>`
+  ).join("");
   dom.districtSelect.value = state.districtId;
   dom.cropSelect.value = state.cropId;
-  dom.seasonSelect.value = state.season;
-  dom.acreInput.value = String(state.acres);
-  dom.language.value = state.lang;
 }
 
 function bindEvents() {
-  dom.language.addEventListener("change", () => {
-    state.lang = dom.language.value;
-    ask(dom.questionInput.value);
-  });
-
-  dom.districtSelect.addEventListener("change", async () => {
+  dom.language.addEventListener("change", () => state.language = dom.language.value);
+  dom.districtSelect.addEventListener("change", () => {
     state.districtId = dom.districtSelect.value;
-    await refreshWeather();
-    ask(dom.questionInput.value);
+    refreshSignals();
   });
-
   dom.cropSelect.addEventListener("change", () => {
     state.cropId = dom.cropSelect.value;
-    ask(dom.questionInput.value);
+    refreshSignals();
   });
-
-  dom.seasonSelect.addEventListener("change", () => {
-    state.season = dom.seasonSelect.value;
-    ask(dom.questionInput.value);
+  dom.unitSelect.addEventListener("change", () => state.unit = dom.unitSelect.value);
+  dom.areaInput.addEventListener("input", () => state.area = Number(dom.areaInput.value) || 1);
+  dom.askButton.addEventListener("click", askAdvisor);
+  dom.queryInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") askAdvisor();
   });
-
-  dom.acreInput.addEventListener("input", () => {
-    state.acres = Math.max(0.25, Number(dom.acreInput.value) || 1);
-    ask(dom.questionInput.value);
-  });
-
-  dom.askButton.addEventListener("click", () => ask(dom.questionInput.value));
-  dom.questionInput.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") ask(dom.questionInput.value);
-  });
-  dom.replayButton.addEventListener("click", () => speak(state.speakingText));
-  dom.micButton.addEventListener("click", toggleListening);
-  dom.diseaseImage.addEventListener("change", handleDiseaseImage);
+  dom.refreshSignals.addEventListener("click", refreshSignals);
+  dom.cropImage.addEventListener("change", handleImage);
   dom.diseaseButton.addEventListener("click", analyzeDisease);
+  dom.recordButton.addEventListener("click", toggleRecording);
+  dom.replayButton.addEventListener("click", () => speak(state.speakingText));
 }
 
-function setupSpeech() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    dom.listeningStatus.textContent = "Voice input unavailable in this browser";
-    return;
-  }
-
-  const recognition = new SpeechRecognition();
-  recognition.continuous = false;
-  recognition.interimResults = true;
-  recognition.lang = state.lang === "en" ? "en-IN" : "hi-IN";
-
-  recognition.addEventListener("start", () => {
-    dom.micButton.classList.add("is-listening");
-    dom.listeningStatus.textContent = "Listening";
-  });
-
-  recognition.addEventListener("result", (event) => {
-    const transcript = Array.from(event.results)
-      .map((result) => result[0].transcript)
-      .join(" ");
-    dom.questionInput.value = transcript;
-    if (event.results[event.results.length - 1].isFinal) ask(transcript);
-  });
-
-  recognition.addEventListener("end", () => {
-    dom.micButton.classList.remove("is-listening");
-    dom.listeningStatus.textContent = "Ready";
-  });
-
-  recognition.addEventListener("error", () => {
-    dom.micButton.classList.remove("is-listening");
-    dom.listeningStatus.textContent = "Voice input needs browser permission";
-  });
-
-  state.recognition = recognition;
-}
-
-function toggleListening() {
-  if (!state.recognition) return;
-  state.recognition.lang = state.lang === "en" ? "en-IN" : "hi-IN";
-  try {
-    state.recognition.start();
-  } catch {
-    state.recognition.stop();
-  }
-}
-
-async function refreshWeather() {
-  const district = state.marketData.districts.find((item) => item.id === state.districtId);
-  const params = new URLSearchParams({
-    latitude: district.latitude,
-    longitude: district.longitude,
-    current: "temperature_2m,wind_speed_10m",
-    daily: "precipitation_probability_max,precipitation_sum",
-    forecast_days: "2",
-    timezone: "Asia/Kolkata"
-  });
-
-  try {
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 4500);
-    const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`, {
-      signal: controller.signal
-    });
-    window.clearTimeout(timeout);
-    const data = await response.json();
-    state.weather = {
-      temperature: data.current?.temperature_2m ?? 34,
-      windSpeed: data.current?.wind_speed_10m ?? 12,
-      rainProbability: data.daily?.precipitation_probability_max?.[1] ?? data.daily?.precipitation_probability_max?.[0] ?? 35,
-      precipitation: data.daily?.precipitation_sum?.[1] ?? data.daily?.precipitation_sum?.[0] ?? 0,
-      source: "open-meteo"
-    };
-    dom.networkStatus.textContent = "Weather connected";
-  } catch {
-    state.weather = null;
-    dom.networkStatus.textContent = "Offline-ready demo data";
-  }
-}
-
-function ask(question) {
-  const advice = buildAdvice(question, state);
-  state.lastAdvice = advice;
-  state.districtId = advice.district.id;
-  state.cropId = advice.crop.id;
-  state.acres = advice.acres;
-  syncControls();
-  renderAdvice(advice);
-  renderCards(advice.cards);
-  speak(advice.summary);
-}
-
-function syncControls() {
-  dom.districtSelect.value = state.districtId;
-  dom.cropSelect.value = state.cropId;
-  dom.acreInput.value = String(state.acres);
-}
-
-function renderAdvice(advice) {
-  state.speakingText = advice.summary;
-  dom.answerText.textContent = advice.summary;
-  dom.stepList.innerHTML = advice.steps.map((step) => `<span>${escapeHtml(step)}</span>`).join("");
-  dom.sourceList.innerHTML = advice.sources
-    .slice(0, 5)
-    .map((source) => `<a href="${source.url}" target="_blank" rel="noreferrer">${source.name}</a>`)
-    .join("");
-}
-
-function renderCards(cards) {
-  dom.signalGrid.innerHTML = cards
-    .map((card) => `
-      <article class="signal-card">
-        <div>
-          <h3>${escapeHtml(card.title)}</h3>
-          <p class="metric">${escapeHtml(card.metric)}</p>
-        </div>
-        <p class="note">${escapeHtml(card.note)}</p>
-        <span class="tag">${escapeHtml(card.tag)}</span>
-      </article>
-    `)
-    .join("");
-}
-
-function renderQuickQuestions() {
-  dom.quickGrid.innerHTML = state.knowledgeBase.quickQuestions
-    .map((item) => `<button class="chip" type="button" data-question="${escapeHtml(item.text)}">${escapeHtml(item.label)}</button>`)
-    .join("");
+function renderQuickPrompts() {
+  dom.quickGrid.innerHTML = quickPrompts.map((prompt) =>
+    `<button class="chip" type="button" data-prompt="${escapeHtml(prompt)}">${escapeHtml(prompt)}</button>`
+  ).join("");
   dom.quickGrid.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-question]");
+    const button = event.target.closest("[data-prompt]");
     if (!button) return;
-    dom.questionInput.value = button.dataset.question;
-    ask(button.dataset.question);
+    dom.queryInput.value = button.dataset.prompt;
+    askAdvisor();
   });
 }
 
-function handleDiseaseImage() {
-  const file = dom.diseaseImage.files?.[0];
-  if (!file) {
-    state.diseaseImage = null;
-    dom.imageLabel.textContent = "Tap to upload or take photo";
-    dom.imagePreview.innerHTML = "<span>No photo selected</span>";
-    return;
-  }
+async function refreshSignals() {
+  const weatherPromise = fetchJson(`/api/weather?district=${encodeURIComponent(state.districtId)}`).catch((error) => ({ error: error.message }));
+  const marketPromise = fetchJson(`/api/market?district=${encodeURIComponent(state.districtId)}&crop=${encodeURIComponent(state.cropId)}`).catch((error) => ({ error: error.message }));
+  const [weather, market] = await Promise.all([weatherPromise, marketPromise]);
+  renderSignals(weather, market);
+}
 
+function renderSignals(weather, market) {
+  const weatherSummary = weather.summary || {};
+  const marketSummary = market.summary || {};
+  dom.signalGrid.innerHTML = `
+    <section class="signal-card">
+      <h3>Weather</h3>
+      <p class="metric">${weatherSummary.rainProbability ?? "--"}% rain</p>
+      <p>${escapeHtml(weatherSummary.sprayWindow || weather.error || "Open-Meteo signal unavailable locally.")}</p>
+      <span>${escapeHtml(weather.source || "Open-Meteo")}</span>
+    </section>
+    <section class="signal-card">
+      <h3>Mandi</h3>
+      <p class="metric">₹${marketSummary.latestPrice ?? "--"}</p>
+      <p>${escapeHtml(marketSummary.voiceResponse || market.error || "Fallback market signal unavailable.")}</p>
+      <canvas class="sparkline" width="260" height="58" data-history="${escapeHtml(JSON.stringify(marketSummary.history || []))}"></canvas>
+    </section>
+  `;
+  drawSparklines();
+}
+
+async function askAdvisor() {
+  setBusy(dom.askButton, true, "Thinking...");
+  try {
+    const payload = await fetchJson("/api/advisor", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(buildContext({ query: dom.queryInput.value.trim() }))
+    });
+    renderAdvisorResult(payload.result, payload.modelBacked ? "Gemini + local RAG" : payload.warning || "Local fallback");
+  } catch (error) {
+    renderError(error.message);
+  } finally {
+    setBusy(dom.askButton, false, "Ask");
+  }
+}
+
+function handleImage() {
+  const file = dom.cropImage.files?.[0];
+  if (!file) return;
   if (!file.type.startsWith("image/")) {
-    state.diseaseImage = null;
-    dom.imageLabel.textContent = "Please choose an image file";
-    dom.imagePreview.innerHTML = "<span>Unsupported file</span>";
+    dom.imageLabel.textContent = "Choose an image file";
     return;
   }
-
   if (file.size > 5 * 1024 * 1024) {
-    state.diseaseImage = null;
-    dom.imageLabel.textContent = "Image is larger than 5 MB";
-    dom.imagePreview.innerHTML = "<span>Choose a smaller photo</span>";
+    dom.imageLabel.textContent = "Use image under 5 MB";
     return;
   }
-
-  const previewUrl = URL.createObjectURL(file);
   dom.imageLabel.textContent = file.name;
-  dom.imagePreview.innerHTML = `<img src="${previewUrl}" alt="Selected crop issue preview" />`;
-
+  dom.imagePreview.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Selected crop issue" />`;
   const reader = new FileReader();
   reader.addEventListener("load", () => {
-    const dataUrl = String(reader.result || "");
-    state.diseaseImage = {
+    state.image = {
       mimeType: file.type,
-      data: dataUrl.split(",")[1] || ""
+      data: String(reader.result || "").split(",")[1] || ""
     };
   });
   reader.readAsDataURL(file);
@@ -289,98 +175,186 @@ function handleDiseaseImage() {
 
 async function analyzeDisease() {
   const description = dom.symptomInput.value.trim();
-  if (!state.diseaseImage && !description) {
-    renderDiseaseMessage("Add a crop photo or symptom details first.", "low");
+  if (!state.image && !description) {
+    renderError("Add a crop photo or symptom description first.");
     return;
   }
-
-  const crop = state.marketData.crops.find((item) => item.id === state.cropId);
-  const district = state.marketData.districts.find((item) => item.id === state.districtId);
-  dom.diseaseButton.disabled = true;
-  dom.diseaseButton.textContent = "Analyzing...";
-  renderDiseaseMessage("Gemini is checking the crop issue with organic farming guardrails.", "medium");
-
+  setBusy(dom.diseaseButton, true, "Analyzing...");
   try {
-    const response = await fetch("/api/disease", {
+    const crop = selectedCrop();
+    const district = selectedDistrict();
+    const payload = await fetchJson("/api/disease", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        crop: crop?.name || state.cropId,
-        district: district?.name || state.districtId,
-        language: state.lang,
+        crop: crop.name,
+        district: district.name,
+        language: state.language,
         description,
-        image: state.diseaseImage
+        image: state.image
       })
     });
-
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(payload.message || payload.detail || payload.error || "Disease analysis is unavailable");
-    }
-
-    renderDiseaseResult(payload.result);
-    if (payload.result?.spoken_summary) speak(payload.result.spoken_summary);
+    renderDiseaseResult(payload.result, payload.modelBacked ? "Gemini image triage" : payload.warning || "Local disease KB fallback");
   } catch (error) {
-    renderDiseaseMessage(`${error.message}. On Vercel, add GEMINI_API_KEY in project environment variables.`, "low");
+    renderError(error.message);
   } finally {
-    dom.diseaseButton.disabled = false;
-    dom.diseaseButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M5 8h14M7 16h10" /></svg>Analyze crop issue';
+    setBusy(dom.diseaseButton, false, "Analyze disease");
   }
 }
 
-function renderDiseaseMessage(message, confidence) {
-  dom.diseaseResult.innerHTML = `
-    <p class="eyebrow">Disease advisor</p>
-    <h3>${escapeHtml(confidence === "low" ? "Needs more information" : "Analysis in progress")}</h3>
-    <p>${escapeHtml(message)}</p>
-  `;
+async function toggleRecording() {
+  if (state.mediaRecorder?.state === "recording") {
+    state.mediaRecorder.stop();
+    return;
+  }
+  if (!navigator.mediaDevices?.getUserMedia) {
+    dom.recordStatus.textContent = "Browser recording is unavailable. Type the question instead.";
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    state.chunks = [];
+    state.mediaRecorder = new MediaRecorder(stream);
+    state.mediaRecorder.addEventListener("dataavailable", (event) => state.chunks.push(event.data));
+    state.mediaRecorder.addEventListener("stop", () => transcribeRecording(stream));
+    state.mediaRecorder.start();
+    dom.recordButton.classList.add("is-recording");
+    dom.recordStatus.textContent = "Recording... tap again to stop.";
+  } catch {
+    dom.recordStatus.textContent = "Microphone permission is needed, or type the question.";
+  }
 }
 
-function renderDiseaseResult(result) {
-  const confidence = result.confidence || "low";
-  const list = (items = []) => items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
-  dom.diseaseResult.innerHTML = `
-    <p class="eyebrow">Disease advisor</p>
-    <div class="result-heading">
-      <h3>${escapeHtml(result.possible_issue || "Unclear issue")}</h3>
-      <span class="confidence ${escapeHtml(confidence)}">${escapeHtml(confidence)} confidence</span>
-    </div>
-    <p>${escapeHtml(result.spoken_summary || "")}</p>
-    <div class="result-columns">
-      <section>
-        <h4>Visible signs</h4>
-        <ul>${list(result.visible_signs)}</ul>
-      </section>
-      <section>
-        <h4>Organic remedies</h4>
-        <ul>${list(result.organic_remedies)}</ul>
-      </section>
-      <section>
-        <h4>Prevention</h4>
-        <ul>${list(result.prevention)}</ul>
-      </section>
-      <section>
-        <h4>Escalate when</h4>
-        <ul>${list(result.when_to_escalate)}</ul>
-      </section>
-    </div>
-    <p class="safety-line">${escapeHtml(result.safety_note || "Verify locally before treatment.")}</p>
+async function transcribeRecording(stream) {
+  stream.getTracks().forEach((track) => track.stop());
+  dom.recordButton.classList.remove("is-recording");
+  dom.recordStatus.textContent = "Sending audio to Hugging Face Whisper route...";
+  const blob = new Blob(state.chunks, { type: state.chunks[0]?.type || "audio/webm" });
+  const data = await blobToBase64(blob);
+  try {
+    const payload = await fetchJson("/api/transcribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ audio: { mimeType: blob.type, data } })
+    });
+    dom.queryInput.value = payload.text || "";
+    dom.recordStatus.textContent = payload.text ? "Transcribed with Whisper." : "No speech detected.";
+  } catch (error) {
+    dom.recordStatus.textContent = `${error.message} Type the question or configure HF_TOKEN/WHISPER_ENDPOINT_URL.`;
+  }
+}
+
+function renderAdvisorResult(result, source) {
+  state.speakingText = result.voice_response;
+  dom.answerText.textContent = result.voice_response;
+  dom.safetyLine.textContent = result.safety_note || "Verify locally before acting.";
+  dom.resultGrid.innerHTML = `
+    <article><strong>Market signal</strong><span>${escapeHtml(result.market_signal || "wait")}</span></article>
+    <article><strong>Confidence</strong><span>${Math.round((result.confidence || 0) * 100)}%</span></article>
+    <article><strong>Weather alert</strong><span>${escapeHtml(result.weather_alert || "No alert")}</span></article>
+    <article><strong>Source</strong><span>${escapeHtml(source)}</span></article>
+    <article class="wide"><strong>Steps</strong><ul>${listItems(result.remedy_steps)}</ul></article>
   `;
+  speak(result.voice_response);
+}
+
+function renderDiseaseResult(result, source) {
+  state.speakingText = result.voice_response;
+  dom.answerText.textContent = result.voice_response;
+  dom.safetyLine.textContent = result.safety_note || "Confirm with KVK/local agriculture officer.";
+  dom.resultGrid.innerHTML = `
+    <article><strong>Possible issue</strong><span>${escapeHtml(result.possible_issue)}</span></article>
+    <article><strong>Confidence</strong><span>${Math.round((result.confidence || 0) * 100)}%</span></article>
+    <article><strong>Source</strong><span>${escapeHtml(source)}</span></article>
+    <article class="wide"><strong>Visual signs</strong><ul>${listItems(result.visual_signs)}</ul></article>
+    <article class="wide"><strong>Organic treatment</strong><ul>${listItems(result.organic_treatment)}</ul></article>
+    <article class="wide"><strong>Escalate if</strong><ul>${listItems(result.escalation)}</ul></article>
+  `;
+  speak(result.voice_response);
+}
+
+function renderError(message) {
+  dom.answerText.textContent = message;
+  dom.resultGrid.innerHTML = "";
+}
+
+function drawSparklines() {
+  document.querySelectorAll(".sparkline").forEach((canvas) => {
+    const history = JSON.parse(canvas.dataset.history || "[]");
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (history.length < 2) return;
+    const values = history.map((item) => item.modal);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    ctx.strokeStyle = "#1e6fb8";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    values.forEach((value, index) => {
+      const x = (index / (values.length - 1)) * (canvas.width - 12) + 6;
+      const y = canvas.height - 8 - ((value - min) / Math.max(1, max - min)) * (canvas.height - 18);
+      if (index === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  });
+}
+
+function selectedDistrict() {
+  return state.districts.find((item) => item.id === state.districtId) || state.districts[0];
+}
+
+function selectedCrop() {
+  return state.market.crops.find((item) => item.id === state.cropId) || state.market.crops[0];
+}
+
+function buildContext(extra = {}) {
+  return {
+    ...extra,
+    districtId: state.districtId,
+    cropId: state.cropId,
+    language: state.language,
+    unit: state.unit,
+    area: state.area
+  };
+}
+
+async function fetchJson(url, options) {
+  const response = await fetch(url, options);
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.message || payload.detail || payload.error || "Request failed");
+  return payload;
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => resolve(String(reader.result).split(",")[1] || ""));
+    reader.addEventListener("error", reject);
+    reader.readAsDataURL(blob);
+  });
+}
+
+function setBusy(button, busy, text) {
+  button.disabled = busy;
+  button.textContent = text;
+}
+
+function listItems(items = []) {
+  return items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
 }
 
 function speak(text) {
   if (!("speechSynthesis" in window) || !text) return;
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = state.lang === "en" ? "en-IN" : "hi-IN";
-  utterance.rate = 0.92;
+  utterance.lang = state.language === "en" ? "en-IN" : "hi-IN";
+  utterance.rate = 0.9;
   window.speechSynthesis.speak(utterance);
 }
 
 function escapeHtml(value) {
-  return String(value)
+  return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -388,6 +362,4 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-boot().catch((error) => {
-  dom.answerText.textContent = `Could not start the prototype: ${error.message}`;
-});
+boot().catch((error) => renderError(error.message));

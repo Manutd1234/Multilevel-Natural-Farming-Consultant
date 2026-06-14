@@ -1,2 +1,5 @@
 assignment.png
 .DS_Store
+models/
+.env
+.vercel/

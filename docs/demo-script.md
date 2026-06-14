@@ -1,68 +1,46 @@
 # Demo Script
 
-Target length: under three minutes.
-
 ## 1. Opening
 
-Show the assignment PDF briefly and say the selected option is Option B: Multilevel Natural Farming Consultant.
+Show KisaanVaani and explain the selected Option B modules:
 
-## 2. Farmer Question
+- Weather & Market Intelligence
+- Disease Identification & Organic Treatment
 
-Open Kheti Saathi on mobile. Select Hinglish, Hisar, Bajra, Kharif, 2 acres.
+## 2. Voice Flow
 
-Speak or type:
+Tap the mic, speak:
 
-`Kal barish hogi kya? Main bajra ka beej daal sakta hoon?`
+`Kya abhi pyaaz bechna chahiye? Kal barish hogi kya?`
 
-Show:
+If Hugging Face Whisper env is unavailable, type the same query.
 
-- voice capture,
-- weather card,
-- spoken answer,
-- sowing risk note.
+## 3. Weather & Market
 
-## 3. Market Intelligence
+Click refresh. Show:
 
-Tap `Mandi price` and show:
+- Open-Meteo rain and spray window
+- mandi price and 7-day sparkline
+- sell/hold/wait advisory
 
-- demo mandi band,
-- trend,
-- verification reminder,
-- links to Agmarknet/eNAM.
+## 4. Disease
 
-## 4. Seed and Finance
+Upload a leaf image or type:
 
-Tap `Seed and cost` and show:
+`Patton par brown spots hain aur rain ke baad badh gaya.`
 
-- seed quantity for 2 acres,
-- estimated first-season cost range,
-- rotation note,
-- subsidy/local office reminder.
+Click Analyze Disease. Show:
 
-## 5. Disease Identification
+- possible issue
+- confidence
+- organic treatment steps
+- KVK escalation warning
 
-Upload or capture a leaf photo. Add symptoms:
+## 5. Guardrails
 
-`Leaves have brown spots and yellow edges after rain.`
+Point out:
 
-Show:
-
-- Gemini image triage,
-- confidence level,
-- organic remedies,
-- prevention,
-- KVK/local agriculture officer escalation warning.
-
-## 6. Trust and Safety
-
-Replay the answer and point out:
-
-- short spoken response,
-- local verification note,
-- no unsupported live price claims,
-- no final disease diagnosis from photo alone,
-- easy JSON updates for real market and seed data.
-
-## 7. Close
-
-Say the prototype can be deployed as a static site today and upgraded with real STT/TTS models, RAG over official sources, and live market ingestion.
+- Gemini API key stays in Vercel env
+- Whisper is Hugging Face based
+- Open-Meteo endpoint is live
+- AI routes use local RAG context and fallback safely when keys are missing

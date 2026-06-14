@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/disease.js": {
+    "api/*.js": {
       "maxDuration": 30
     }
   },
