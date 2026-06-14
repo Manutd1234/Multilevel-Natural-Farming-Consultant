@@ -16,12 +16,12 @@
           </svg>
         </div>
         <div>
-          <p>Option B rebuilt for Gemini + Open-Meteo + Hugging Face Whisper</p>
+          <p id="brandTagline">Option B rebuilt for Gemini + Open-Meteo + Hugging Face Whisper</p>
           <h1>KisaanVaani</h1>
         </div>
       </div>
       <label class="field compact">
-        <span>Language</span>
+        <span id="languageLabel">Language</span>
         <select id="language">
           <option value="hinglish">Hinglish</option>
           <option value="hi">हिंदी</option>
@@ -35,7 +35,7 @@
         <div class="hero-copy">
           <p class="eyebrow" id="serviceStatus">Vercel-ready prototype</p>
           <h2 id="hero-title">Bolkar pucho. Photo bhejo. Safe organic salah lo.</h2>
-          <p>Weather, mandi trend, and crop disease triage for farmers moving to natural farming.</p>
+          <p id="heroSubtitle">Weather, mandi trend, and crop disease triage for farmers moving to natural farming.</p>
         </div>
 
         <div class="voice-box" aria-label="Voice controls">
@@ -61,22 +61,22 @@
 
       <section class="context-bar" aria-label="Farm context">
         <label class="field">
-          <span>District</span>
+          <span id="districtLabel">District</span>
           <select id="districtSelect"></select>
         </label>
         <label class="field">
-          <span>Crop</span>
+          <span id="cropLabel">Crop</span>
           <select id="cropSelect"></select>
         </label>
         <label class="field">
-          <span>Land unit</span>
+          <span id="unitLabel">Land unit</span>
           <select id="unitSelect">
             <option value="acre">Acre</option>
             <option value="bigha">Bigha</option>
           </select>
         </label>
         <label class="field">
-          <span>Area</span>
+          <span id="areaLabel">Area</span>
           <input id="areaInput" type="number" min="0.25" max="100" step="0.25" value="2" />
         </label>
       </section>
@@ -85,8 +85,8 @@
         <article class="tool-panel">
           <div class="panel-head">
             <div>
-              <p class="eyebrow">Module 1</p>
-              <h2>Weather & Market Intelligence</h2>
+              <p class="eyebrow" id="moduleOneLabel">Module 1</p>
+              <h2 id="signalsTitle">Weather & Market Intelligence</h2>
             </div>
             <button class="icon-action" id="refreshSignals" type="button" aria-label="Refresh signals">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v6h-6" /></svg>
@@ -98,20 +98,20 @@
         <article class="tool-panel disease-panel">
           <div class="panel-head">
             <div>
-              <p class="eyebrow">Module 2</p>
-              <h2>Disease Identification & Organic Treatment</h2>
+              <p class="eyebrow" id="moduleTwoLabel">Module 2</p>
+              <h2 id="diseaseTitle">Disease Identification & Organic Treatment</h2>
             </div>
           </div>
 
           <div class="disease-tool">
             <label class="upload-box" for="cropImage">
-              <span>Crop photo</span>
+              <span id="cropPhotoLabel">Crop photo</span>
               <strong id="imageLabel">Upload/take leaf photo</strong>
               <input id="cropImage" type="file" accept="image/*" capture="environment" />
             </label>
-            <div class="image-preview" id="imagePreview"><span>No photo selected</span></div>
+            <div class="image-preview" id="imagePreview"><span id="noPhotoLabel">No photo selected</span></div>
             <label class="field symptom-field">
-              <span>Symptoms</span>
+              <span id="symptomLabel">Symptoms</span>
               <textarea id="symptomInput" rows="4" placeholder="Example: Patte peele ho rahe hain, brown spots hain, rain ke baad badh gaya."></textarea>
             </label>
             <button class="primary-action disease-action" id="diseaseButton" type="button">
@@ -125,7 +125,7 @@
       <section class="answer-panel" aria-labelledby="answer-title">
         <div class="panel-head">
           <div>
-            <p class="eyebrow">Grounded response</p>
+            <p class="eyebrow" id="answerEyebrow">Grounded response</p>
             <h2 id="answer-title">Kisaan Mitra answer</h2>
           </div>
           <button class="icon-action" id="replayButton" type="button" aria-label="Replay answer">
