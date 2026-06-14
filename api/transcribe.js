@@ -27,9 +27,10 @@ module.exports = async function handler(req, res) {
   const payload = await readBody(req, 12_000_000);
   if (!payload.audio?.data) return sendJson(res, 400, { error: "Missing audio.data base64" });
   if (!process.env.HF_TOKEN && !process.env.WHISPER_ENDPOINT_URL) {
-    return sendJson(res, 503, {
-      error: "Missing Hugging Face configuration",
-      message: "Set HF_TOKEN for the Hugging Face Inference API or WHISPER_ENDPOINT_URL for a hosted Whisper endpoint."
+    return sendJson(res, 200, {
+      text: "",
+      source: "browser-stt",
+      message: "Server-side Whisper not configured. Browser Web Speech API handles transcription directly."
     });
   }
 

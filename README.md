@@ -2,6 +2,18 @@
 
 Voice-Based Natural Farming Consultant for Connecting Dreams Foundation Option B.
 
+### Zero-config demo mode
+
+Without any environment variables the app still works:
+- **Weather:** Open-Meteo (free, no key) — live district forecasts
+- **Market:** seeded fallback mandi dataset — 7 crops, realistic prices
+- **Voice:** browser Web Speech API — Hindi + Hinglish, no server needed
+- **Disease/Advisory:** local organic knowledge base — no LLM required
+
+Add `GEMINI_API_KEY` (free at aistudio.google.com) to unlock Gemini-backed answers.
+
+---
+
 This is a complete rebuild around the supplied A-standard plan, adapted to the requested deployment stack:
 
 - **LLM/Vision:** Gemini API through Vercel Functions
@@ -42,25 +54,26 @@ Local static serving can test only the UI. The Node dev server can test the serv
 
 ## Environment Variables
 
-Required for Gemini-backed answers:
+**Required** for Gemini-backed answers:
 
 ```bash
-GEMINI_API_KEY=your_google_ai_studio_key
+GEMINI_API_KEY=your_google_ai_studio_key   # free at aistudio.google.com
 ```
 
-Optional:
+**Optional** — the app works without these (falls back gracefully):
 
 ```bash
-GEMINI_MODEL=gemini-3.5-flash
-DATA_GOV_API_KEY=your_data_gov_india_key
+GEMINI_MODEL=gemini-2.0-flash              # default; override to gemini-1.5-flash if needed
+DATA_GOV_API_KEY=your_data_gov_india_key   # enables live mandi prices from data.gov.in
 DATA_GOV_RESOURCE_ID=9ef84268-d588-465a-a308-a864a43d0070
-HF_TOKEN=your_hugging_face_token
+HF_TOKEN=your_hugging_face_token           # only needed for server-side Whisper fallback
 WHISPER_MODEL=openai/whisper-small
 WHISPER_ENDPOINT_URL=https://your-custom-whisper-endpoint
 ```
 
-`HF_TOKEN` enables the Hugging Face Inference API route. `WHISPER_ENDPOINT_URL` is preferred if you host a downloaded Whisper model on Hugging Face Spaces or another GPU/CPU endpoint.
-`DATA_GOV_API_KEY` enables live mandi prices; the app falls back to seeded mandi data when live records are unavailable.
+> **Voice (STT) — no token needed.** The microphone button uses the browser's built-in Web Speech API by default (Android Chrome, desktop Chrome/Edge). No API key or server config required. `HF_TOKEN` is a secondary fallback only.
+>
+> `DATA_GOV_API_KEY` enables live mandi prices; the app falls back to seeded data (7 crops) when the live API is unavailable.
 
 ## Download Whisper From Hugging Face
 
@@ -120,11 +133,19 @@ src/
 
 ## Deploy To Vercel
 
-1. Import this GitHub repo in Vercel.
-2. Set `GEMINI_API_KEY` in Vercel Project Settings → Environment Variables.
-3. Set either `HF_TOKEN` or `WHISPER_ENDPOINT_URL` for the Whisper route.
-4. Optionally set `DATA_GOV_API_KEY` for live mandi prices.
-5. Deploy `main`.
+### Quick setup (2 minutes)
+
+1. Fork this repo on GitHub.
+2. Go to [vercel.com](https://vercel.com) → New Project → import your fork.
+3. In **Project Settings → Environment Variables**, add:
+   - `GEMINI_API_KEY` — get a free key at [aistudio.google.com](https://aistudio.google.com)
+4. Click **Deploy**.
+
+That's it. Voice works out of the box via browser Web Speech API. Mandi prices fall back to the seeded dataset when the live API is unavailable.
+
+### Optional: enable live mandi prices
+
+Register at [data.gov.in](https://data.gov.in) and add `DATA_GOV_API_KEY` to Vercel env vars.
 
 No build step is required.
 

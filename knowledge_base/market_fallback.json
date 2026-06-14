@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-06-14",
+  "lastUpdated": "2026-06-15",
   "note": "Seeded fallback dataset for demo. Replace with Agmarknet/data.gov.in ingestion in production.",
   "crops": [
     {
@@ -77,13 +77,56 @@
       "storageRisk": "high",
       "markets": [
         { "districtId": "hisar", "name": "Hisar", "history": [
-          { "date": "2026-06-08", "modal": 1320 },
           { "date": "2026-06-09", "modal": 1300 },
           { "date": "2026-06-10", "modal": 1280 },
           { "date": "2026-06-11", "modal": 1250 },
           { "date": "2026-06-12", "modal": 1230 },
           { "date": "2026-06-13", "modal": 1210 },
-          { "date": "2026-06-14", "modal": 1190 }
+          { "date": "2026-06-14", "modal": 1190 },
+          { "date": "2026-06-15", "modal": 1170 }
+        ] }
+      ]
+    },
+    {
+      "id": "wheat",
+      "name": "Wheat / Gehun",
+      "unit": "quintal",
+      "storageRisk": "low",
+      "markets": [
+        { "districtId": "hisar", "name": "Hisar", "history": [
+          { "date": "2026-06-09", "modal": 2120 },
+          { "date": "2026-06-10", "modal": 2130 },
+          { "date": "2026-06-11", "modal": 2140 },
+          { "date": "2026-06-12", "modal": 2145 },
+          { "date": "2026-06-13", "modal": 2155 },
+          { "date": "2026-06-14", "modal": 2165 },
+          { "date": "2026-06-15", "modal": 2180 }
+        ] },
+        { "districtId": "karnal", "name": "Karnal", "history": [
+          { "date": "2026-06-09", "modal": 2115 },
+          { "date": "2026-06-10", "modal": 2125 },
+          { "date": "2026-06-11", "modal": 2135 },
+          { "date": "2026-06-12", "modal": 2145 },
+          { "date": "2026-06-13", "modal": 2150 },
+          { "date": "2026-06-14", "modal": 2160 },
+          { "date": "2026-06-15", "modal": 2170 }
+        ] }
+      ]
+    },
+    {
+      "id": "tomato",
+      "name": "Tomato / Tamatar",
+      "unit": "quintal",
+      "storageRisk": "high",
+      "markets": [
+        { "districtId": "hisar", "name": "Hisar", "history": [
+          { "date": "2026-06-09", "modal": 1200 },
+          { "date": "2026-06-10", "modal": 1150 },
+          { "date": "2026-06-11", "modal": 1080 },
+          { "date": "2026-06-12", "modal": 1050 },
+          { "date": "2026-06-13", "modal": 1010 },
+          { "date": "2026-06-14", "modal": 990 },
+          { "date": "2026-06-15", "modal": 980 }
         ] }
       ]
     }

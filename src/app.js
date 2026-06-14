@@ -24,7 +24,7 @@ const FALLBACK_DISTRICTS = [
 ];
 
 const FALLBACK_MARKET = {
-  lastUpdated: "2026-06-14",
+  lastUpdated: "2026-06-15",
   note: "Embedded fallback dataset for demo startup resilience.",
   crops: [
     {
@@ -121,13 +121,55 @@ const FALLBACK_MARKET = {
           districtId: "hisar",
           name: "Hisar",
           history: [
-            { date: "2026-06-08", modal: 1320 },
             { date: "2026-06-09", modal: 1300 },
             { date: "2026-06-10", modal: 1280 },
             { date: "2026-06-11", modal: 1250 },
             { date: "2026-06-12", modal: 1230 },
             { date: "2026-06-13", modal: 1210 },
-            { date: "2026-06-14", modal: 1190 }
+            { date: "2026-06-14", modal: 1190 },
+            { date: "2026-06-15", modal: 1170 }
+          ]
+        }
+      ]
+    },
+    {
+      id: "wheat",
+      name: "Wheat / Gehun",
+      unit: "quintal",
+      storageRisk: "low",
+      markets: [
+        {
+          districtId: "hisar",
+          name: "Hisar",
+          history: [
+            { date: "2026-06-09", modal: 2120 },
+            { date: "2026-06-10", modal: 2130 },
+            { date: "2026-06-11", modal: 2140 },
+            { date: "2026-06-12", modal: 2145 },
+            { date: "2026-06-13", modal: 2155 },
+            { date: "2026-06-14", modal: 2165 },
+            { date: "2026-06-15", modal: 2180 }
+          ]
+        }
+      ]
+    },
+    {
+      id: "tomato",
+      name: "Tomato / Tamatar",
+      unit: "quintal",
+      storageRisk: "high",
+      markets: [
+        {
+          districtId: "hisar",
+          name: "Hisar",
+          history: [
+            { date: "2026-06-09", modal: 1200 },
+            { date: "2026-06-10", modal: 1150 },
+            { date: "2026-06-11", modal: 1080 },
+            { date: "2026-06-12", modal: 1050 },
+            { date: "2026-06-13", modal: 1010 },
+            { date: "2026-06-14", modal: 990 },
+            { date: "2026-06-15", modal: 980 }
           ]
         }
       ]
@@ -184,19 +226,19 @@ const dom = {
 const COPY = {
   hinglish: {
     htmlLang: "hi",
-    brandTagline: "Option B rebuilt for Gemini + Open-Meteo + Hugging Face Whisper",
+    brandTagline: "Gemini + Open-Meteo + bilingual voice farming consultant",
     languageLabel: "Language",
     serviceStatus: "Vercel-ready prototype",
     heroTitle: "Bolkar pucho. Photo bhejo. Safe organic salah lo.",
     heroSubtitle: "Weather, mandi trend, aur crop disease triage natural farming farmers ke liye.",
-    recordStatus: "Tap to record. Whisper route Vercel par Hugging Face config use karta hai.",
+    recordStatus: "Tap to record — Browser Voice API, free aur instant.",
     recordUnavailable: "Browser recording unavailable hai. Question type kar dein.",
     recording: "Recording... stop karne ke liye dobara tap karein.",
     micPermission: "Microphone permission chahiye, ya question type karein.",
-    sendingAudio: "Audio Hugging Face Whisper route ko bhej rahe hain...",
-    transcribed: "Whisper se transcription ho gaya.",
+    sendingAudio: "Aawaz sun rahe hain...",
+    transcribed: "Bol diya — ab poochhein!",
     noSpeech: "Speech detect nahi hui.",
-    whisperConfig: "Type karein ya HF_TOKEN/WHISPER_ENDPOINT_URL configure karein.",
+    whisperConfig: "Type karein ya microphone permission dein.",
     defaultQuery: "Kya abhi pyaaz bechna chahiye? Kal barish hogi kya?",
     queryPlaceholder: "Apna sawal bolkar ya type karke poochhein",
     ask: "Ask",
@@ -253,19 +295,19 @@ const COPY = {
   },
   hi: {
     htmlLang: "hi",
-    brandTagline: "Gemini + Open-Meteo + Hugging Face Whisper के साथ Option B",
+    brandTagline: "Gemini + Open-Meteo के साथ voice-first प्राकृतिक खेती सलाह",
     languageLabel: "भाषा",
     serviceStatus: "Vercel-ready prototype",
     heroTitle: "बोलकर पूछें। फोटो भेजें। सुरक्षित जैविक सलाह लें।",
     heroSubtitle: "प्राकृतिक खेती अपनाने वाले किसानों के लिए मौसम, मंडी भाव और फसल रोग सलाह।",
-    recordStatus: "रिकॉर्ड करने के लिए टैप करें। Whisper route Vercel पर Hugging Face config इस्तेमाल करता है।",
+    recordStatus: "रिकॉर्ड करने के लिए टैप करें — Browser Voice API, मुफ्त और तुरंत।",
     recordUnavailable: "इस ब्राउज़र में रिकॉर्डिंग उपलब्ध नहीं है। सवाल टाइप करें।",
     recording: "रिकॉर्डिंग चालू है... रोकने के लिए दोबारा टैप करें।",
     micPermission: "माइक्रोफोन अनुमति चाहिए, या सवाल टाइप करें।",
-    sendingAudio: "ऑडियो Hugging Face Whisper route को भेजा जा रहा है...",
-    transcribed: "Whisper से transcription हो गया।",
+    sendingAudio: "आवाज़ सुन रहे हैं...",
+    transcribed: "बोल दिया — अब पूछें!",
     noSpeech: "आवाज़ detect नहीं हुई।",
-    whisperConfig: "सवाल टाइप करें या HF_TOKEN/WHISPER_ENDPOINT_URL configure करें।",
+    whisperConfig: "सवाल टाइप करें या माइक्रोफोन अनुमति दें।",
     defaultQuery: "क्या अभी प्याज बेचना चाहिए? कल बारिश होगी क्या?",
     queryPlaceholder: "अपना सवाल बोलकर या टाइप करके पूछें",
     ask: "पूछें",
@@ -322,19 +364,19 @@ const COPY = {
   },
   en: {
     htmlLang: "en",
-    brandTagline: "Option B rebuilt for Gemini + Open-Meteo + Hugging Face Whisper",
+    brandTagline: "Voice-first natural farming consultant — Gemini + Open-Meteo",
     languageLabel: "Language",
     serviceStatus: "Vercel-ready prototype",
     heroTitle: "Ask by voice. Send a crop photo. Get safe organic advice.",
     heroSubtitle: "Weather, mandi trends, and crop disease triage for farmers moving to natural farming.",
-    recordStatus: "Tap to record. The Whisper route uses Hugging Face config on Vercel.",
+    recordStatus: "Tap to record — uses browser Voice API, free and instant.",
     recordUnavailable: "Browser recording is unavailable. Type the question instead.",
     recording: "Recording... tap again to stop.",
     micPermission: "Microphone permission is needed, or type the question.",
-    sendingAudio: "Sending audio to the Hugging Face Whisper route...",
-    transcribed: "Transcribed with Whisper.",
+    sendingAudio: "Listening...",
+    transcribed: "Got it — ask now!",
     noSpeech: "No speech detected.",
-    whisperConfig: "Type the question or configure HF_TOKEN/WHISPER_ENDPOINT_URL.",
+    whisperConfig: "Type the question or allow microphone access.",
     defaultQuery: "Should I sell onions now? Will it rain tomorrow?",
     queryPlaceholder: "Ask by voice or type your question",
     ask: "Ask",
@@ -658,6 +700,32 @@ async function toggleRecording() {
     state.mediaRecorder.stop();
     return;
   }
+
+  // Prefer browser Web Speech API — free, no server, works on Android Chrome
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognition) {
+    const recognition = new SpeechRecognition();
+    recognition.lang = state.language === "en" ? "en-IN" : "hi-IN";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    dom.recordButton.classList.add("is-recording");
+    dom.recordStatus.textContent = t("recording");
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      dom.queryInput.value = transcript;
+      dom.recordButton.classList.remove("is-recording");
+      dom.recordStatus.textContent = transcript ? t("transcribed") : t("noSpeech");
+    };
+    recognition.onend = () => dom.recordButton.classList.remove("is-recording");
+    recognition.onerror = () => {
+      dom.recordButton.classList.remove("is-recording");
+      dom.recordStatus.textContent = t("micPermission");
+    };
+    recognition.start();
+    return;
+  }
+
+  // Fallback: MediaRecorder → HF Whisper server route
   if (!navigator.mediaDevices?.getUserMedia) {
     dom.recordStatus.textContent = t("recordUnavailable");
     return;
@@ -690,9 +758,20 @@ async function transcribeRecording(stream) {
     });
     dom.queryInput.value = payload.text || "";
     dom.recordStatus.textContent = payload.text ? t("transcribed") : t("noSpeech");
-  } catch (error) {
-    dom.recordStatus.textContent = `${error.message} ${t("whisperConfig")}`;
+  } catch {
+    dom.recordStatus.textContent = t("whisperConfig");
   }
+}
+
+function confidenceClass(conf) {
+  if (conf >= 0.75) return "conf-high";
+  if (conf >= 0.5) return "conf-mid";
+  return "conf-low";
+}
+
+function signalClass(signal) {
+  const map = { sell: "sig-sell", hold: "sig-hold", wait: "sig-wait" };
+  return map[signal] || "";
 }
 
 function renderAdvisorResult(result, source) {
@@ -700,8 +779,8 @@ function renderAdvisorResult(result, source) {
   dom.answerText.textContent = result.voice_response;
   dom.safetyLine.textContent = result.safety_note || t("defaultSafety");
   dom.resultGrid.innerHTML = `
-    <article><strong>${escapeHtml(t("marketSignal"))}</strong><span>${escapeHtml(result.market_signal || "wait")}</span></article>
-    <article><strong>${escapeHtml(t("confidence"))}</strong><span>${Math.round((result.confidence || 0) * 100)}%</span></article>
+    <article><strong>${escapeHtml(t("marketSignal"))}</strong><span class="${signalClass(result.market_signal)}">${escapeHtml(result.market_signal || "wait")}</span></article>
+    <article><strong>${escapeHtml(t("confidence"))}</strong><span class="${confidenceClass(result.confidence || 0)}">${Math.round((result.confidence || 0) * 100)}%</span></article>
     <article><strong>${escapeHtml(t("weatherAlert"))}</strong><span>${escapeHtml(result.weather_alert || t("noAlert"))}</span></article>
     <article><strong>${escapeHtml(t("source"))}</strong><span>${escapeHtml(source)}</span></article>
     <article class="wide"><strong>${escapeHtml(t("steps"))}</strong><ul>${listItems(result.remedy_steps)}</ul></article>
@@ -715,7 +794,7 @@ function renderDiseaseResult(result, source) {
   dom.safetyLine.textContent = result.safety_note || t("defaultSafety");
   dom.resultGrid.innerHTML = `
     <article><strong>${escapeHtml(t("possibleIssue"))}</strong><span>${escapeHtml(result.possible_issue)}</span></article>
-    <article><strong>${escapeHtml(t("confidence"))}</strong><span>${Math.round((result.confidence || 0) * 100)}%</span></article>
+    <article><strong>${escapeHtml(t("confidence"))}</strong><span class="${confidenceClass(result.confidence || 0)}">${Math.round((result.confidence || 0) * 100)}%</span></article>
     <article><strong>${escapeHtml(t("source"))}</strong><span>${escapeHtml(source)}</span></article>
     <article class="wide"><strong>${escapeHtml(t("visualSigns"))}</strong><ul>${listItems(result.visual_signs)}</ul></article>
     <article class="wide"><strong>${escapeHtml(t("organicTreatment"))}</strong><ul>${listItems(result.organic_treatment)}</ul></article>
@@ -738,16 +817,27 @@ function drawSparklines() {
     const values = history.map((item) => item.modal);
     const min = Math.min(...values);
     const max = Math.max(...values);
+    const range = Math.max(1, max - min);
+    const w = canvas.width;
+    const h = canvas.height;
     ctx.strokeStyle = "#1e6fb8";
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
     values.forEach((value, index) => {
-      const x = (index / (values.length - 1)) * (canvas.width - 12) + 6;
-      const y = canvas.height - 8 - ((value - min) / Math.max(1, max - min)) * (canvas.height - 18);
+      const x = (index / (values.length - 1)) * (w - 12) + 6;
+      const y = h - 18 - ((value - min) / range) * (h - 30);
       if (index === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     });
     ctx.stroke();
+    ctx.font = "10px system-ui, sans-serif";
+    ctx.fillStyle = "#667269";
+    ctx.textAlign = "left";
+    ctx.fillText(`₹${values[0]}`, 4, h - 2);
+    const last = values[values.length - 1];
+    ctx.fillStyle = last >= values[0] ? "#2f7d4f" : "#8a4b00";
+    ctx.textAlign = "right";
+    ctx.fillText(`₹${last}`, w - 4, h - 2);
   });
 }
 

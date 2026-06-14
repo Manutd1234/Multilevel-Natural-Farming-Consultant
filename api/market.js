@@ -8,7 +8,9 @@ const COMMODITY_MAP = {
   potato: "Potato",
   bajra: "Bajra(Pearl Millet/Cumbu)",
   moong: "Green Gram (Moong)(Whole)",
-  mustard: "Mustard"
+  mustard: "Mustard",
+  wheat: "Wheat",
+  tomato: "Tomato"
 };
 
 function toNumber(value) {

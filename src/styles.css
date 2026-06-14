@@ -546,3 +546,19 @@ button {
     grid-column: span 1;
   }
 }
+
+/* Confidence level colours */
+.conf-high { color: var(--leaf-deep) !important; font-weight: 880; }
+.conf-mid  { color: #b45309 !important; font-weight: 880; }
+.conf-low  { color: var(--danger) !important; font-weight: 880; }
+
+/* Market signal colours */
+.sig-sell { color: var(--leaf-deep) !important; font-weight: 880; }
+.sig-hold { color: #b45309 !important; font-weight: 880; }
+.sig-wait { color: var(--muted) !important; }
+
+/* Sparkline: extra bottom space for price labels */
+.sparkline {
+  height: 72px;
+  overflow: visible;
+}
