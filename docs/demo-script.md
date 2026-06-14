@@ -39,15 +39,30 @@ Tap `Seed and cost` and show:
 - rotation note,
 - subsidy/local office reminder.
 
-## 5. Trust and Safety
+## 5. Disease Identification
+
+Upload or capture a leaf photo. Add symptoms:
+
+`Leaves have brown spots and yellow edges after rain.`
+
+Show:
+
+- Gemini image triage,
+- confidence level,
+- organic remedies,
+- prevention,
+- KVK/local agriculture officer escalation warning.
+
+## 6. Trust and Safety
 
 Replay the answer and point out:
 
 - short spoken response,
 - local verification note,
 - no unsupported live price claims,
+- no final disease diagnosis from photo alone,
 - easy JSON updates for real market and seed data.
 
-## 6. Close
+## 7. Close
 
 Say the prototype can be deployed as a static site today and upgraded with real STT/TTS models, RAG over official sources, and live market ingestion.

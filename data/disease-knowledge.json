@@ -1,0 +1,66 @@
+{
+  "lastUpdated": "2026-06-14",
+  "scope": "Organic and natural-farming disease/pest triage for a prototype. Verify high-risk treatment locally.",
+  "organicPrinciples": [
+    "Use clean seed, crop rotation, resistant/local varieties, and field sanitation first.",
+    "Prefer biological and botanical controls before any stronger intervention.",
+    "Avoid spraying during peak sun, strong wind, rain, or when beneficial insects are active.",
+    "Do not mix unknown remedies. Test on a small patch before wider application.",
+    "Escalate fast-spreading disease, severe wilting, unknown pests, or livestock/food safety risks to a local agriculture officer or KVK."
+  ],
+  "commonIssues": [
+    {
+      "id": "fungal_leaf_spot",
+      "label": "Fungal leaf spot / blight",
+      "crops": ["wheat", "bajra", "moong", "mustard", "cotton"],
+      "visibleSigns": ["round or irregular brown spots", "yellow halo", "spots spreading after humidity or rain"],
+      "organicRemedies": [
+        "Remove heavily infected leaves and avoid leaving diseased residue in the field.",
+        "Improve spacing and air flow; avoid overhead irrigation late in the day.",
+        "Use a locally recommended bio-fungicide such as Trichoderma-based compost treatment where available."
+      ],
+      "prevention": "Rotate crops and use clean seed. Avoid excess nitrogen and waterlogging."
+    },
+    {
+      "id": "powdery_mildew",
+      "label": "Powdery mildew",
+      "crops": ["moong", "mustard", "wheat"],
+      "visibleSigns": ["white powdery layer", "leaves curling", "patches expanding in dry-humid conditions"],
+      "organicRemedies": [
+        "Remove the most affected leaves if infection is early and localized.",
+        "Improve sunlight and air movement around plants.",
+        "Use locally approved sulfur-free or bio-control guidance from the agriculture office for organic plots."
+      ],
+      "prevention": "Avoid dense sowing and repeated susceptible crops in the same plot."
+    },
+    {
+      "id": "aphid_or_sucking_pest",
+      "label": "Aphids or sucking pests",
+      "crops": ["mustard", "cotton", "moong", "bajra"],
+      "visibleSigns": ["small insects under leaves", "sticky honeydew", "curling leaves", "sooty black layer"],
+      "organicRemedies": [
+        "Spray plain water on a small affected patch to dislodge early clusters.",
+        "Encourage ladybird beetles and avoid broad-spectrum sprays.",
+        "Use neem-based botanical spray only at locally recommended dilution and timing."
+      ],
+      "prevention": "Monitor field edges weekly and avoid excess nitrogen that attracts soft-bodied pests."
+    },
+    {
+      "id": "nutrient_or_water_stress",
+      "label": "Nutrient or water stress",
+      "crops": ["wheat", "bajra", "moong", "mustard", "cotton"],
+      "visibleSigns": ["uniform yellowing", "leaf tip drying", "wilting without clear spots or insects"],
+      "organicRemedies": [
+        "Check soil moisture at root depth before irrigation.",
+        "Apply mature compost or jeevamrit as locally practiced; avoid over-application.",
+        "Mulch where possible to reduce heat and moisture stress."
+      ],
+      "prevention": "Use soil health card guidance, compost, mulch, and crop rotation with legumes."
+    }
+  ],
+  "safetyCopy": {
+    "hinglish": "Photo se final diagnosis pakka nahi hota. Agar rog tezi se fail raha hai, paudha murjha raha hai, ya nuksan zyada hai, local agriculture officer/KVK se turant confirm karein.",
+    "hi": "फोटो से अंतिम पहचान पक्की नहीं होती। अगर रोग तेजी से फैल रहा है, पौधा मुरझा रहा है या नुकसान ज्यादा है, तो स्थानीय कृषि अधिकारी/KVK से तुरंत पुष्टि करें।",
+    "en": "A photo is not a final diagnosis. If the issue is spreading fast, plants are wilting, or damage is high, confirm urgently with a local agriculture officer or KVK."
+  }
+}

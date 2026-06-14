@@ -21,12 +21,16 @@ def test_required_files_exist() -> None:
         "src/styles.css",
         "data/market-signals.json",
         "data/seed-finance.json",
+        "data/disease-knowledge.json",
         "data/knowledge-base.json",
+        "api/disease.js",
         "docs/market-analysis.md",
         "docs/model-analysis.md",
         "docs/prompt-design.md",
+        "docs/disease-treatment.md",
         "docs/demo-script.md",
         "README.md",
+        "vercel.json",
     ]
     missing = [path for path in required if not (ROOT / path).exists()]
     assert not missing, f"Missing files: {missing}"
@@ -64,9 +68,29 @@ def test_guardrails_include_market_verification() -> None:
     assert all(note for note in kb["safetyNotes"].values())
 
 
+def test_disease_feature_has_guardrails() -> None:
+    disease = load_json("data/disease-knowledge.json")
+    assert disease["commonIssues"], "Disease knowledge must include common issues"
+    assert "hinglish" in disease["safetyCopy"]
+    joined = " ".join(disease["organicPrinciples"]).lower()
+    assert "local agriculture officer" in joined
+    assert "unknown remedies" in joined
+
+
+def test_vercel_gemini_function_is_configured() -> None:
+    api_file = (ROOT / "api" / "disease.js").read_text(encoding="utf-8")
+    vercel = load_json("vercel.json")
+    assert "GEMINI_API_KEY" in api_file
+    assert "generativelanguage.googleapis.com" in api_file
+    assert "inline_data" in api_file
+    assert "api/disease.js" in vercel["functions"]
+
+
 if __name__ == "__main__":
     test_required_files_exist()
     test_market_data_has_core_entities()
     test_seed_finance_matches_market_crops()
     test_guardrails_include_market_verification()
+    test_disease_feature_has_guardrails()
+    test_vercel_gemini_function_is_configured()
     print("Project validation passed")

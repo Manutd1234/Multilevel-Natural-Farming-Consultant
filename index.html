@@ -79,6 +79,42 @@
         </label>
       </section>
 
+      <section class="disease-panel" aria-labelledby="disease-title">
+        <div class="disease-copy">
+          <p class="eyebrow">Gemini image triage</p>
+          <h2 id="disease-title">Disease Identification & Treatment</h2>
+          <p>Upload a leaf or crop photo and describe what the farmer sees. Kheti Saathi will return organic treatment steps with local verification warnings.</p>
+        </div>
+
+        <div class="disease-tool">
+          <label class="upload-box" for="diseaseImage">
+            <span>Crop photo</span>
+            <strong id="imageLabel">Tap to upload or take photo</strong>
+            <input id="diseaseImage" type="file" accept="image/*" capture="environment" />
+          </label>
+
+          <div class="image-preview" id="imagePreview" aria-live="polite">
+            <span>No photo selected</span>
+          </div>
+
+          <label class="field symptom-field">
+            <span>Symptoms</span>
+            <textarea id="symptomInput" rows="4" placeholder="Example: Leaves have brown spots and yellow edges after rain."></textarea>
+          </label>
+
+          <button class="primary-action disease-action" id="diseaseButton" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M5 8h14M7 16h10" /></svg>
+            Analyze crop issue
+          </button>
+        </div>
+
+        <div class="disease-result" id="diseaseResult" aria-live="polite">
+          <p class="eyebrow">Disease advisor</p>
+          <h3>Waiting for crop photo or symptom details</h3>
+          <p>Advice will stay organic-first and will ask for local agriculture officer/KVK confirmation when confidence is low.</p>
+        </div>
+      </section>
+
       <section class="signal-grid" id="signalGrid" aria-label="Live farm signals"></section>
 
       <section class="advisor-output" aria-labelledby="answer-title">

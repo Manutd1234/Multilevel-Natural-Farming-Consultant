@@ -11,6 +11,7 @@ const state = {
   acres: 2,
   lang: "hinglish",
   lastAdvice: null,
+  diseaseImage: null,
   recognition: null,
   speakingText: ""
 };
@@ -31,7 +32,13 @@ const dom = {
   sourceList: document.querySelector("#sourceList"),
   quickGrid: document.querySelector("#quickGrid"),
   networkStatus: document.querySelector("#networkStatus"),
-  listeningStatus: document.querySelector("#listeningStatus")
+  listeningStatus: document.querySelector("#listeningStatus"),
+  diseaseImage: document.querySelector("#diseaseImage"),
+  imageLabel: document.querySelector("#imageLabel"),
+  imagePreview: document.querySelector("#imagePreview"),
+  symptomInput: document.querySelector("#symptomInput"),
+  diseaseButton: document.querySelector("#diseaseButton"),
+  diseaseResult: document.querySelector("#diseaseResult")
 };
 
 async function loadJson(path) {
@@ -102,6 +109,8 @@ function bindEvents() {
   });
   dom.replayButton.addEventListener("click", () => speak(state.speakingText));
   dom.micButton.addEventListener("click", toggleListening);
+  dom.diseaseImage.addEventListener("change", handleDiseaseImage);
+  dom.diseaseButton.addEventListener("click", analyzeDisease);
 }
 
 function setupSpeech() {
@@ -238,6 +247,127 @@ function renderQuickQuestions() {
     dom.questionInput.value = button.dataset.question;
     ask(button.dataset.question);
   });
+}
+
+function handleDiseaseImage() {
+  const file = dom.diseaseImage.files?.[0];
+  if (!file) {
+    state.diseaseImage = null;
+    dom.imageLabel.textContent = "Tap to upload or take photo";
+    dom.imagePreview.innerHTML = "<span>No photo selected</span>";
+    return;
+  }
+
+  if (!file.type.startsWith("image/")) {
+    state.diseaseImage = null;
+    dom.imageLabel.textContent = "Please choose an image file";
+    dom.imagePreview.innerHTML = "<span>Unsupported file</span>";
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    state.diseaseImage = null;
+    dom.imageLabel.textContent = "Image is larger than 5 MB";
+    dom.imagePreview.innerHTML = "<span>Choose a smaller photo</span>";
+    return;
+  }
+
+  const previewUrl = URL.createObjectURL(file);
+  dom.imageLabel.textContent = file.name;
+  dom.imagePreview.innerHTML = `<img src="${previewUrl}" alt="Selected crop issue preview" />`;
+
+  const reader = new FileReader();
+  reader.addEventListener("load", () => {
+    const dataUrl = String(reader.result || "");
+    state.diseaseImage = {
+      mimeType: file.type,
+      data: dataUrl.split(",")[1] || ""
+    };
+  });
+  reader.readAsDataURL(file);
+}
+
+async function analyzeDisease() {
+  const description = dom.symptomInput.value.trim();
+  if (!state.diseaseImage && !description) {
+    renderDiseaseMessage("Add a crop photo or symptom details first.", "low");
+    return;
+  }
+
+  const crop = state.marketData.crops.find((item) => item.id === state.cropId);
+  const district = state.marketData.districts.find((item) => item.id === state.districtId);
+  dom.diseaseButton.disabled = true;
+  dom.diseaseButton.textContent = "Analyzing...";
+  renderDiseaseMessage("Gemini is checking the crop issue with organic farming guardrails.", "medium");
+
+  try {
+    const response = await fetch("/api/disease", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        crop: crop?.name || state.cropId,
+        district: district?.name || state.districtId,
+        language: state.lang,
+        description,
+        image: state.diseaseImage
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.message || payload.detail || payload.error || "Disease analysis is unavailable");
+    }
+
+    renderDiseaseResult(payload.result);
+    if (payload.result?.spoken_summary) speak(payload.result.spoken_summary);
+  } catch (error) {
+    renderDiseaseMessage(`${error.message}. On Vercel, add GEMINI_API_KEY in project environment variables.`, "low");
+  } finally {
+    dom.diseaseButton.disabled = false;
+    dom.diseaseButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M5 8h14M7 16h10" /></svg>Analyze crop issue';
+  }
+}
+
+function renderDiseaseMessage(message, confidence) {
+  dom.diseaseResult.innerHTML = `
+    <p class="eyebrow">Disease advisor</p>
+    <h3>${escapeHtml(confidence === "low" ? "Needs more information" : "Analysis in progress")}</h3>
+    <p>${escapeHtml(message)}</p>
+  `;
+}
+
+function renderDiseaseResult(result) {
+  const confidence = result.confidence || "low";
+  const list = (items = []) => items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+  dom.diseaseResult.innerHTML = `
+    <p class="eyebrow">Disease advisor</p>
+    <div class="result-heading">
+      <h3>${escapeHtml(result.possible_issue || "Unclear issue")}</h3>
+      <span class="confidence ${escapeHtml(confidence)}">${escapeHtml(confidence)} confidence</span>
+    </div>
+    <p>${escapeHtml(result.spoken_summary || "")}</p>
+    <div class="result-columns">
+      <section>
+        <h4>Visible signs</h4>
+        <ul>${list(result.visible_signs)}</ul>
+      </section>
+      <section>
+        <h4>Organic remedies</h4>
+        <ul>${list(result.organic_remedies)}</ul>
+      </section>
+      <section>
+        <h4>Prevention</h4>
+        <ul>${list(result.prevention)}</ul>
+      </section>
+      <section>
+        <h4>Escalate when</h4>
+        <ul>${list(result.when_to_escalate)}</ul>
+      </section>
+    </div>
+    <p class="safety-line">${escapeHtml(result.safety_note || "Verify locally before treatment.")}</p>
+  `;
 }
 
 function speak(text) {
