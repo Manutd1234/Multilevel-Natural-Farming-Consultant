@@ -1,5 +1,11 @@
 assignment.png
 .DS_Store
 models/
+node_modules/
+
+# Secrets — never commit real keys. Use .env.example as the template.
 .env
+.env.*
+!.env.example
+
 .vercel/

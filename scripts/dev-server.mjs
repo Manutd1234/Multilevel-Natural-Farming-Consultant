@@ -18,8 +18,10 @@ const mimeTypes = {
 
 function serveStatic(req, res) {
   const url = new URL(req.url, `http://localhost:${port}`);
-  const safePath = path.normalize(decodeURIComponent(url.pathname)).replace(/^(\.\.[/\\])+/, "");
-  const filePath = path.join(root, safePath === "/" ? "index.html" : safePath);
+  const pathname = decodeURIComponent(url.pathname);
+  const requested = pathname === "/" ? "index.html" : pathname;
+  const safePath = path.normalize(requested).replace(/^(\.\.[/\\])+/, "");
+  const filePath = path.join(root, safePath);
   if (!filePath.startsWith(root)) {
     res.writeHead(403);
     return res.end("Forbidden");
