@@ -6,31 +6,25 @@ Push `main` to GitHub. Vercel can import the repo directly.
 
 ## Vercel
 
-Required project environment variables:
+Set these under **Project → Settings → Environment Variables** (Production + Preview).
+Vercel injects them into `process.env` at runtime — the local `.env` file is never
+deployed (it is in both `.gitignore` and `.vercelignore`).
+
+Required:
 
 ```bash
-GEMINI_API_KEY=...
+GEMINI_API_KEY=...        # Gemini-backed advisor + disease answers
 ```
 
-Whisper configuration:
+Optional — every variable below has a graceful fallback if unset:
 
 ```bash
-HF_TOKEN=...
-```
-
-or:
-
-```bash
-WHISPER_ENDPOINT_URL=...
-```
-
-Optional:
-
-```bash
-GEMINI_MODEL=gemini-3.5-flash
-DATA_GOV_API_KEY=your_data_gov_india_key
-DATA_GOV_RESOURCE_ID=9ef84268-d588-465a-a308-a864a43d0070
+GEMINI_MODEL=gemini-2.0-flash               # default model
+HF_TOKEN=...                                # server-side Whisper STT (browser Web Speech API works without it)
+WHISPER_ENDPOINT_URL=...                    # alternative to HF_TOKEN: a custom Whisper endpoint
 WHISPER_MODEL=openai/whisper-small
+DATA_GOV_API_KEY=your_data_gov_india_key    # live Agmarknet mandi prices
+DATA_GOV_RESOURCE_ID=9ef84268-d588-465a-a308-a864a43d0070
 ```
 
 `DATA_GOV_API_KEY` enables live Agmarknet mandi records through data.gov.in. If it is absent or the live API has no matching record, `/api/market` still returns the seeded demo mandi dataset with `live:false`.

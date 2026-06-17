@@ -67,7 +67,9 @@ def test_api_guardrails_and_integrations_are_present() -> None:
     transcribe = (ROOT / "api/transcribe.js").read_text(encoding="utf-8")
     weather = (ROOT / "api/weather.js").read_text(encoding="utf-8")
     assert "GEMINI_API_KEY" in shared
-    assert "responseFormat" in shared
+    # Gemini structured output uses responseMimeType + responseSchema.
+    assert "responseMimeType" in shared
+    assert "responseSchema" in shared
     assert "inline_data" in disease
     assert "synthetic chemical pesticides" in disease
     assert "api-inference.huggingface.co" in transcribe

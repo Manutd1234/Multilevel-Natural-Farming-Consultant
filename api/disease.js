@@ -59,10 +59,21 @@ function localDiseaseFallback(payload, knowledge) {
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") return sendJson(res, 405, { error: "Use POST /api/disease" });
   const payload = await readBody(req);
+  if (payload.image?.data) {
+    const approxBytes = Math.ceil(payload.image.data.length * 0.75);
+    if (approxBytes > 5 * 1024 * 1024) return sendJson(res, 400, { error: "Image exceeds 5 MB limit" });
+  }
   const knowledge = loadKnowledge();
 
+  const langInstruction = payload.language === "en"
+    ? "Respond ONLY in English."
+    : payload.language === "hi"
+      ? "Respond ONLY in Hindi using Devanagari script."
+      : "Respond ONLY in Hinglish (Hindi written in Roman script, mixed with simple English).";
+
   const prompt = `
-You are KisaanVaani Disease Triage.
+You are Farming Consultant Disease Triage.
+${langInstruction}
 Triage crop disease/pest risk from image and/or symptoms.
 This is not final diagnosis. Recommend organic remedies only.
 Never recommend synthetic chemical pesticides, unsafe mixtures, antibiotics, or exact toxic concentrations.

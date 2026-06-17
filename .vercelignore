@@ -1,0 +1,14 @@
+# Never upload secrets — Vercel reads keys from Project → Environment Variables.
+.env
+.env.*
+!.env.example
+
+# Dev-only / not needed at runtime.
+models/
+node_modules/
+scripts/
+tests/
+docs/
+.vercel/
+assignment.png
+.DS_Store

@@ -8,6 +8,9 @@ const state = {
   area: 2,
   image: null,
   lastSignals: null,
+  lastResult: null,
+  lastResultType: null,
+  lastResultSource: null,
   mediaRecorder: null,
   chunks: [],
   speakingText: "",
@@ -264,7 +267,7 @@ const COPY = {
     analyzing: "Analyze ho raha hai...",
     addSymptoms: "Pehle crop photo ya symptoms add karein.",
     answerEyebrow: "Grounded response",
-    answerTitle: "Kisaan Mitra answer",
+    answerTitle: "Farming Consultant answer",
     emptyAnswer: "Question poochhein, signals refresh karein, ya crop photo upload karein.",
     defaultSafety: "Prototype advice. Severe crop issue aur mandi price local source se confirm karein.",
     weather: "Weather",
@@ -333,7 +336,7 @@ const COPY = {
     analyzing: "जांच हो रही है...",
     addSymptoms: "पहले फसल फोटो या लक्षण जोड़ें।",
     answerEyebrow: "Grounded response",
-    answerTitle: "किसान मित्र जवाब",
+    answerTitle: "Farming Consultant जवाब",
     emptyAnswer: "सवाल पूछें, signals refresh करें, या फसल फोटो upload करें।",
     defaultSafety: "यह prototype सलाह है। गंभीर फसल समस्या और मंडी भाव स्थानीय स्रोत से confirm करें।",
     weather: "मौसम",
@@ -402,7 +405,7 @@ const COPY = {
     analyzing: "Analyzing...",
     addSymptoms: "Add a crop photo or symptom description first.",
     answerEyebrow: "Grounded response",
-    answerTitle: "Kisaan Mitra answer",
+    answerTitle: "Farming Consultant answer",
     emptyAnswer: "Ask a question, refresh signals, or upload a crop photo to begin.",
     defaultSafety: "Prototype advice. Confirm severe crop issues and mandi prices locally.",
     weather: "Weather",
@@ -559,6 +562,11 @@ function applyLanguage({ resetQuery = false } = {}) {
   dom.refreshSignals.setAttribute("aria-label", t("signalsTitle"));
   dom.replayButton.setAttribute("aria-label", t("answerTitle"));
   renderQuickPrompts();
+  if (state.lastResult && state.lastResultType === "advisor") {
+    renderAdvisorResult(state.lastResult, state.lastResultSource);
+  } else if (state.lastResult && state.lastResultType === "disease") {
+    renderDiseaseResult(state.lastResult, state.lastResultSource);
+  }
 }
 
 function renderQuickPrompts() {
@@ -622,13 +630,18 @@ function renderSignals(weather, market) {
 }
 
 async function askAdvisor() {
+  const query = dom.queryInput.value.trim();
+  if (!query) {
+    dom.queryInput.focus();
+    return;
+  }
   const requestId = ++state.advisorRequestId;
   setBusy(dom.askButton, true, t("thinking"));
   try {
     const payload = await fetchJson("/api/advisor", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(buildContext({ query: dom.queryInput.value.trim() }))
+      body: JSON.stringify(buildContext({ query }))
     });
     if (requestId !== state.advisorRequestId) return;
     renderAdvisorResult(payload.result, payload.modelBacked ? t("geminiRag") : t("localFallback"));
@@ -756,6 +769,10 @@ async function transcribeRecording(stream) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ audio: { mimeType: blob.type, data } })
     });
+    if (payload.source === "browser-stt") {
+      dom.recordStatus.textContent = t("recordUnavailable");
+      return;
+    }
     dom.queryInput.value = payload.text || "";
     dom.recordStatus.textContent = payload.text ? t("transcribed") : t("noSpeech");
   } catch {
@@ -774,7 +791,10 @@ function signalClass(signal) {
   return map[signal] || "";
 }
 
-function renderAdvisorResult(result, source) {
+function renderAdvisorResult(result, source, { silent = false } = {}) {
+  state.lastResult = result;
+  state.lastResultType = "advisor";
+  state.lastResultSource = source;
   state.speakingText = result.voice_response;
   dom.answerText.textContent = result.voice_response;
   dom.safetyLine.textContent = result.safety_note || t("defaultSafety");
@@ -785,10 +805,13 @@ function renderAdvisorResult(result, source) {
     <article><strong>${escapeHtml(t("source"))}</strong><span>${escapeHtml(source)}</span></article>
     <article class="wide"><strong>${escapeHtml(t("steps"))}</strong><ul>${listItems(result.remedy_steps)}</ul></article>
   `;
-  speak(result.voice_response);
+  if (!silent) speak(result.voice_response);
 }
 
-function renderDiseaseResult(result, source) {
+function renderDiseaseResult(result, source, { silent = false } = {}) {
+  state.lastResult = result;
+  state.lastResultType = "disease";
+  state.lastResultSource = source;
   state.speakingText = result.voice_response;
   dom.answerText.textContent = result.voice_response;
   dom.safetyLine.textContent = result.safety_note || t("defaultSafety");
@@ -800,7 +823,7 @@ function renderDiseaseResult(result, source) {
     <article class="wide"><strong>${escapeHtml(t("organicTreatment"))}</strong><ul>${listItems(result.organic_treatment)}</ul></article>
     <article class="wide"><strong>${escapeHtml(t("escalateIf"))}</strong><ul>${listItems(result.escalation)}</ul></article>
   `;
-  speak(result.voice_response);
+  if (!silent) speak(result.voice_response);
 }
 
 function renderError(message) {

@@ -349,6 +349,8 @@ function fallbackAdvisor(payload, knowledge) {
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") return sendJson(res, 405, { error: "Use POST /api/advisor" });
   const payload = await readBody(req);
+  payload.query = String(payload.query || "").trim().slice(0, 500);
+  if (!payload.query) return sendJson(res, 400, { error: "query is required" });
   const knowledge = loadKnowledge();
 
   const district = findDistrict(knowledge, payload.districtId);
@@ -377,8 +379,15 @@ module.exports = async function handler(req, res) {
     diseaseHints: knowledge.diseases.slice(0, 6)
   };
 
+  const langInstruction = payload.language === "en"
+    ? "Respond ONLY in English."
+    : payload.language === "hi"
+      ? "Respond ONLY in Hindi using Devanagari script."
+      : "Respond ONLY in Hinglish (Hindi written in Roman script, mixed with simple English).";
+
   const prompt = `
-You are KisaanVaani, a Hindi/Hinglish natural farming consultant.
+You are Farming Consultant, a natural farming advisor.
+${langInstruction}
 Answer only from the provided context. Recommend organic and zero-chemical practices only.
 Always mention confidence. If unsure, recommend KVK/local agriculture officer verification.
 Keep voice_response short and farmer-friendly.

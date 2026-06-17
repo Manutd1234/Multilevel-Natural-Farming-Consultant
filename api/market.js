@@ -1,7 +1,7 @@
 const { sendJson, loadKnowledge, findDistrict, findCropMarket, getLatestPrice, calcTrend, fetchJsonWithTimeout } = require("../lib/shared");
 
 const DATA_GOV_RESOURCE_ID = process.env.DATA_GOV_RESOURCE_ID || "9ef84268-d588-465a-a308-a864a43d0070";
-const DATA_GOV_API_KEY = process.env.DATA_GOV_API_KEY || "579b464db66ec23bdd00000122da23b71a7e42675c4cf670ecb6e062";
+const DATA_GOV_API_KEY = process.env.DATA_GOV_API_KEY || "";
 
 const COMMODITY_MAP = {
   onion: "Onion",
@@ -92,6 +92,7 @@ function normalizeLiveRecords(records, district, cropMarket) {
 }
 
 async function fetchLiveMarketAdvice(knowledge, districtId, cropId, language) {
+  if (!DATA_GOV_API_KEY) throw new Error("DATA_GOV_API_KEY not configured; using seeded fallback dataset.");
   const district = findDistrict(knowledge, districtId);
   const cropMarket = findCropMarket(knowledge, cropId);
   const commodity = COMMODITY_MAP[cropMarket.id] || cropMarket.name.split("/")[0].trim();
