@@ -6,8 +6,11 @@ const {
   findCropMarket,
   getLatestPrice,
   calcTrend,
-  callGemini,
-  safetyNote
+  callLLM,
+  openaiApiKey,
+  safetyNote,
+  coerceList,
+  coerceConfidence
 } = require("../lib/shared");
 const { retrieve } = require("../lib/rag");
 
@@ -431,33 +434,33 @@ Safety note: ${safetyNote(payload.language)}
 Return valid JSON ONLY — no markdown, no extra text. Required fields: voice_response, remedy_steps, confidence, market_signal, safety_note.`;
 
   try {
-    const rawResult = await callGemini({
+    const { result: rawResult, provider } = await callLLM({
       parts: [{ text: prompt }],
       schema: ADVISOR_SCHEMA,
       temperature: 0.25
     });
 
     const result = {
-      voice_response: String(rawResult.voice_response || ""),
-      remedy_steps: Array.isArray(rawResult.remedy_steps) ? rawResult.remedy_steps : [],
-      confidence: typeof rawResult.confidence === "number" ? rawResult.confidence : 0.7,
+      voice_response: String(rawResult.voice_response || "").trim(),
+      remedy_steps: coerceList(rawResult.remedy_steps, []),
+      confidence: coerceConfidence(rawResult.confidence, 0.7),
       market_signal: ["sell", "hold", "wait"].includes(rawResult.market_signal) ? rawResult.market_signal : "wait",
       weather_alert: rawResult.weather_alert || null,
-      source_notes: rawResult.source_notes || [],
+      source_notes: Array.isArray(rawResult.source_notes) ? rawResult.source_notes : coerceList(rawResult.source_notes, []),
       safety_note: String(rawResult.safety_note || safetyNote(payload.language))
     };
 
-    if (!result.voice_response) throw new Error("Gemini returned empty voice_response");
+    if (!result.voice_response) throw new Error("LLM returned empty voice_response");
 
     return sendJson(res, 200, {
-      source: "Gemini + local RAG context",
+      source: `${provider} + local RAG context`,
       modelBacked: true,
       retrieval,
       result
     });
   } catch (error) {
     return sendJson(res, 200, {
-      source: process.env.GEMINI_API_KEY ? "Local fallback (Gemini error)" : "Local fallback (GEMINI_API_KEY not set in Vercel)",
+      source: (openaiApiKey() || process.env.GEMINI_API_KEY) ? "Local fallback (LLM error)" : "Local fallback (no LLM API key set in Vercel)",
       modelBacked: false,
       warning: error.message,
       retrieval,

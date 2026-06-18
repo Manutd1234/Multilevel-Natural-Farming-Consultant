@@ -644,7 +644,7 @@ async function askAdvisor() {
       body: JSON.stringify(buildContext({ query }))
     });
     if (requestId !== state.advisorRequestId) return;
-    renderAdvisorResult(payload.result, payload.modelBacked ? t("geminiRag") : t("localFallback"));
+    renderAdvisorResult(payload.result, payload.source || (payload.modelBacked ? t("geminiRag") : t("localFallback")));
   } catch (error) {
     if (requestId !== state.advisorRequestId) return;
     renderError(error.message);
@@ -699,7 +699,7 @@ async function analyzeDisease() {
       })
     });
     if (requestId !== state.diseaseRequestId) return;
-    renderDiseaseResult(payload.result, payload.modelBacked ? t("geminiDisease") : t("diseaseFallback"));
+    renderDiseaseResult(payload.result, payload.source || (payload.modelBacked ? t("geminiDisease") : t("diseaseFallback")));
   } catch (error) {
     if (requestId !== state.diseaseRequestId) return;
     renderError(error.message);

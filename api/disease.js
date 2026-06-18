@@ -1,4 +1,4 @@
-const { sendJson, readBody, loadKnowledge, callGemini, safetyNote } = require("../lib/shared");
+const { sendJson, readBody, loadKnowledge, callLLM, safetyNote, coerceList, coerceConfidence } = require("../lib/shared");
 const { retrieve } = require("../lib/rag");
 
 const DISEASE_SCHEMA = {
@@ -121,29 +121,34 @@ Return strict JSON matching schema.`;
   parts.push({ text: prompt });
 
   try {
-    const raw = await callGemini({ parts, schema: DISEASE_SCHEMA, temperature: 0.15 });
+    const { result: raw, provider } = await callLLM({ parts, schema: DISEASE_SCHEMA, temperature: 0.15 });
 
-    // Gemini occasionally omits or renames fields; normalize against the schema
-    // and backfill from the top RAG-retrieved disease so the UI is never blank.
+    // The model occasionally omits or renames fields, or returns a string where
+    // an array is expected (gpt-4o-mini does this). Coerce to the UI shape and
+    // backfill from the top RAG-retrieved disease so the card is never blank.
     const language = payload.language || "hinglish";
     const topDisease = retrievedDiseases?.[0]?.raw || {};
-    const arr = (value, fallback) => (Array.isArray(value) && value.length ? value : fallback);
 
     const result = {
       possible_issue: String(raw.possible_issue || raw.disease || raw.issue || topDisease.name || "Unconfirmed crop issue"),
-      confidence: typeof raw.confidence === "number" ? raw.confidence : 0.6,
-      visual_signs: arr(raw.visual_signs, topDisease.symptoms || []),
-      organic_treatment: arr(raw.organic_treatment, topDisease.organicTreatment || []),
-      prevention: arr(raw.prevention, topDisease.prevention || []),
-      escalation: arr(raw.escalation, ESCALATION_COPY[language] || ESCALATION_COPY.hinglish),
-      voice_response: String(raw.voice_response || ""),
+      confidence: coerceConfidence(raw.confidence, 0.6),
+      visual_signs: coerceList(raw.visual_signs, topDisease.symptoms || []),
+      organic_treatment: coerceList(raw.organic_treatment, topDisease.organicTreatment || []),
+      prevention: coerceList(raw.prevention, topDisease.prevention || []),
+      escalation: coerceList(raw.escalation, ESCALATION_COPY[language] || ESCALATION_COPY.hinglish),
+      voice_response: String(raw.voice_response || "").trim(),
       safety_note: String(raw.safety_note || safetyNote(language))
     };
 
-    if (!result.voice_response) throw new Error("Gemini returned empty voice_response");
+    // If the model gave structured fields but no spoken line, synthesize one
+    // rather than discarding a usable analysis.
+    if (!result.voice_response) {
+      const firstStep = result.organic_treatment[0] || "Follow organic steps and confirm with your local KVK.";
+      result.voice_response = `Possible issue: ${result.possible_issue} (confidence ${Math.round(result.confidence * 100)}%). ${firstStep}`;
+    }
 
     return sendJson(res, 200, {
-      source: "Gemini image/text triage + organic KB",
+      source: `${provider} image/text triage + organic KB`,
       modelBacked: true,
       retrieval,
       result
