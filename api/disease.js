@@ -16,6 +16,24 @@ const DISEASE_SCHEMA = {
   required: ["possible_issue", "confidence", "organic_treatment", "voice_response", "safety_note"]
 };
 
+const ESCALATION_COPY = {
+  en: [
+    "Issue spreads quickly across rows",
+    "Plant wilts, rots, or dies",
+    "Farmer cannot identify pest/disease from leaf top and underside"
+  ],
+  hi: [
+    "समस्या rows में जल्दी फैलती है",
+    "पौधा मुरझाता, सड़ता या मरता है",
+    "पत्ती के ऊपर और नीचे देखकर pest/disease identify नहीं हो रहा"
+  ],
+  hinglish: [
+    "Issue rows mein jaldi spread ho",
+    "Plant wilt, rot, ya die ho",
+    "Leaf ke top aur underside se pest/disease identify na ho"
+  ]
+};
+
 function localDiseaseFallback(payload, knowledge, retrievedDiseases) {
   // Prefer the top RAG-retrieved disease (BM25 over symptoms/treatment); fall
   // back to the legacy keyword match, then the first KB entry.
@@ -31,23 +49,6 @@ function localDiseaseFallback(payload, knowledge, retrievedDiseases) {
     hi: `${match.name} का संदेह है, लेकिन confidence low है। जैविक steps follow करें और KVK से confirm करें।`,
     hinglish: `${match.name} ka doubt hai, par confidence low hai. Organic steps follow karein aur KVK se confirm karein.`
   };
-  const escalation = {
-    en: [
-      "Issue spreads quickly across rows",
-      "Plant wilts, rots, or dies",
-      "Farmer cannot identify pest/disease from leaf top and underside"
-    ],
-    hi: [
-      "समस्या rows में जल्दी फैलती है",
-      "पौधा मुरझाता, सड़ता या मरता है",
-      "पत्ती के ऊपर और नीचे देखकर pest/disease identify नहीं हो रहा"
-    ],
-    hinglish: [
-      "Issue rows mein jaldi spread ho",
-      "Plant wilt, rot, ya die ho",
-      "Leaf ke top aur underside se pest/disease identify na ho"
-    ]
-  };
 
   return {
     possible_issue: match.name,
@@ -55,7 +56,7 @@ function localDiseaseFallback(payload, knowledge, retrievedDiseases) {
     visual_signs: match.symptoms,
     organic_treatment: match.organicTreatment,
     prevention: match.prevention,
-    escalation: escalation[language] || escalation.hinglish,
+    escalation: ESCALATION_COPY[language] || ESCALATION_COPY.hinglish,
     voice_response: voiceResponses[language] || voiceResponses.hinglish,
     safety_note: safetyNote(language)
   };
@@ -120,7 +121,27 @@ Return strict JSON matching schema.`;
   parts.push({ text: prompt });
 
   try {
-    const result = await callGemini({ parts, schema: DISEASE_SCHEMA, temperature: 0.15 });
+    const raw = await callGemini({ parts, schema: DISEASE_SCHEMA, temperature: 0.15 });
+
+    // Gemini occasionally omits or renames fields; normalize against the schema
+    // and backfill from the top RAG-retrieved disease so the UI is never blank.
+    const language = payload.language || "hinglish";
+    const topDisease = retrievedDiseases?.[0]?.raw || {};
+    const arr = (value, fallback) => (Array.isArray(value) && value.length ? value : fallback);
+
+    const result = {
+      possible_issue: String(raw.possible_issue || raw.disease || raw.issue || topDisease.name || "Unconfirmed crop issue"),
+      confidence: typeof raw.confidence === "number" ? raw.confidence : 0.6,
+      visual_signs: arr(raw.visual_signs, topDisease.symptoms || []),
+      organic_treatment: arr(raw.organic_treatment, topDisease.organicTreatment || []),
+      prevention: arr(raw.prevention, topDisease.prevention || []),
+      escalation: arr(raw.escalation, ESCALATION_COPY[language] || ESCALATION_COPY.hinglish),
+      voice_response: String(raw.voice_response || ""),
+      safety_note: String(raw.safety_note || safetyNote(language))
+    };
+
+    if (!result.voice_response) throw new Error("Gemini returned empty voice_response");
+
     return sendJson(res, 200, {
       source: "Gemini image/text triage + organic KB",
       modelBacked: true,

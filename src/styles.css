@@ -496,49 +496,6 @@ button {
   font-weight: 760;
 }
 
-.sms-box {
-  margin-top: 1rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--line);
-}
-
-.sms-box .eyebrow {
-  display: block;
-  margin-bottom: 0.4rem;
-}
-
-.sms-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.sms-row input {
-  flex: 1 1 14rem;
-  min-width: 0;
-  min-height: 2.85rem;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 0 0.75rem;
-  color: var(--ink);
-  background: #fff;
-}
-
-.sms-row .primary-action {
-  flex: 0 0 auto;
-}
-
-.sms-status {
-  margin: 0.55rem 0 0;
-  color: var(--leaf-deep);
-  font-size: 0.9rem;
-  font-weight: 760;
-}
-
-.sms-status.is-error {
-  color: var(--danger);
-}
-
 @media (max-width: 900px) {
   .hero-panel,
   .tab-list {

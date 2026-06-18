@@ -223,10 +223,6 @@ const dom = {
   answerText: document.querySelector("#answerText"),
   resultGrid: document.querySelector("#resultGrid"),
   safetyLine: document.querySelector("#safetyLine"),
-  smsLabel: document.querySelector("#smsLabel"),
-  smsPhone: document.querySelector("#smsPhone"),
-  smsButton: document.querySelector("#smsButton"),
-  smsStatus: document.querySelector("#smsStatus"),
   serviceStatus: document.querySelector("#serviceStatus")
 };
 
@@ -293,15 +289,6 @@ const COPY = {
     diseaseFallback: "Local disease KB fallback",
     geminiRag: "Gemini + local RAG",
     geminiDisease: "Gemini image triage",
-    smsTitle: "Yeh salah SMS par bhejein",
-    smsPlaceholder: "Phone number country code ke saath, jaise +9198XXXXXXXX",
-    sendSms: "Send SMS",
-    sendingSms: "Bhej rahe hain...",
-    smsSent: "SMS bhej diya ✓",
-    smsFailed: "SMS nahi gaya:",
-    smsNotConfigured: "SMS abhi set up nahi hai (Vercel mein Twilio keys add karein).",
-    smsNoAnswer: "Pehle ek jawab lein, phir SMS bhejein.",
-    smsNeedPhone: "Country code ke saath phone number daalein.",
     quickPrompts: [
       "Kya abhi pyaaz bechna chahiye?",
       "Kal barish hogi kya? Neem spray kab karun?",
@@ -371,15 +358,6 @@ const COPY = {
     diseaseFallback: "Local disease KB fallback",
     geminiRag: "Gemini + local RAG",
     geminiDisease: "Gemini image triage",
-    smsTitle: "यह सलाह SMS पर भेजें",
-    smsPlaceholder: "country code के साथ फोन नंबर, जैसे +9198XXXXXXXX",
-    sendSms: "SMS भेजें",
-    sendingSms: "भेज रहे हैं...",
-    smsSent: "SMS भेज दिया ✓",
-    smsFailed: "SMS नहीं गया:",
-    smsNotConfigured: "SMS अभी set up नहीं है (Vercel में Twilio keys add करें)।",
-    smsNoAnswer: "पहले एक जवाब लें, फिर SMS भेजें।",
-    smsNeedPhone: "country code के साथ फोन नंबर डालें।",
     quickPrompts: [
       "क्या अभी प्याज बेचना चाहिए?",
       "कल बारिश होगी क्या? नीम spray कब करूं?",
@@ -449,15 +427,6 @@ const COPY = {
     diseaseFallback: "Local disease KB fallback",
     geminiRag: "Gemini + local RAG",
     geminiDisease: "Gemini image triage",
-    smsTitle: "Send this advice as SMS",
-    smsPlaceholder: "Phone with country code, e.g. +9198XXXXXXXX",
-    sendSms: "Send SMS",
-    sendingSms: "Sending...",
-    smsSent: "SMS sent ✓",
-    smsFailed: "SMS failed:",
-    smsNotConfigured: "SMS isn't set up yet (add Twilio keys in Vercel).",
-    smsNoAnswer: "Get an answer first, then send it as SMS.",
-    smsNeedPhone: "Enter a phone number with country code.",
     quickPrompts: [
       "Should I sell onions now?",
       "Will it rain tomorrow? When should I spray neem?",
@@ -536,10 +505,6 @@ function bindEvents() {
   dom.diseaseButton.addEventListener("click", analyzeDisease);
   dom.recordButton.addEventListener("click", toggleRecording);
   dom.replayButton.addEventListener("click", () => speak(state.speakingText));
-  dom.smsButton.addEventListener("click", sendSmsAdvisory);
-  dom.smsPhone.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") sendSmsAdvisory();
-  });
 }
 
 function getCopy() {
@@ -593,9 +558,6 @@ function applyLanguage({ resetQuery = false } = {}) {
   dom.answerTitle.textContent = t("answerTitle");
   if (!state.speakingText) dom.answerText.textContent = t("emptyAnswer");
   dom.safetyLine.textContent = t("defaultSafety");
-  dom.smsLabel.textContent = t("smsTitle");
-  dom.smsPhone.placeholder = t("smsPlaceholder");
-  setButtonLabel(dom.smsButton, t("sendSms"));
   dom.recordButton.setAttribute("aria-label", t("recordStatus"));
   dom.refreshSignals.setAttribute("aria-label", t("signalsTitle"));
   dom.replayButton.setAttribute("aria-label", t("answerTitle"));
@@ -868,54 +830,6 @@ function renderDiseaseResult(result, source, { silent = false } = {}) {
 function renderError(message) {
   dom.answerText.textContent = message;
   dom.resultGrid.innerHTML = "";
-}
-
-function buildSmsBody() {
-  const result = state.lastResult || {};
-  const lines = [result.voice_response || state.speakingText || ""];
-  const steps = Array.isArray(result.remedy_steps)
-    ? result.remedy_steps
-    : Array.isArray(result.organic_treatment)
-      ? result.organic_treatment
-      : [];
-  steps.slice(0, 4).forEach((step, index) => lines.push(`${index + 1}. ${step}`));
-  if (result.safety_note) lines.push(result.safety_note);
-  return lines.filter(Boolean).join("\n").slice(0, 1500);
-}
-
-function showSmsStatus(message, isError = false) {
-  dom.smsStatus.hidden = false;
-  dom.smsStatus.textContent = message;
-  dom.smsStatus.classList.toggle("is-error", Boolean(isError));
-}
-
-async function sendSmsAdvisory() {
-  if (!state.lastResult || !state.speakingText) {
-    showSmsStatus(t("smsNoAnswer"), true);
-    return;
-  }
-  const phone = dom.smsPhone.value.trim();
-  if (!phone) {
-    showSmsStatus(t("smsNeedPhone"), true);
-    dom.smsPhone.focus();
-    return;
-  }
-
-  setBusy(dom.smsButton, true, t("sendingSms"));
-  try {
-    const res = await fetchJson("/api/sms", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone, message: buildSmsBody(), language: state.language })
-    });
-    if (res.sent) showSmsStatus(t("smsSent"));
-    else if (res.configured === false) showSmsStatus(t("smsNotConfigured"), true);
-    else showSmsStatus(`${t("smsFailed")} ${res.reason || ""}`.trim(), true);
-  } catch (error) {
-    showSmsStatus(`${t("smsFailed")} ${error.message}`.trim(), true);
-  } finally {
-    setBusy(dom.smsButton, false, t("sendSms"));
-  }
 }
 
 function drawSparklines() {
