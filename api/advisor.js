@@ -351,7 +351,27 @@ module.exports = async function handler(req, res) {
   const payload = await readBody(req);
   payload.query = String(payload.query || "").trim().slice(0, 500);
   if (!payload.query) return sendJson(res, 400, { error: "query is required" });
-  const knowledge = loadKnowledge();
+
+  let knowledge;
+  try {
+    knowledge = loadKnowledge();
+  } catch (kbError) {
+    console.error("knowledge_base load failed:", kbError.message);
+    knowledge = {
+      districts: [{ id: "hisar", name: "Hisar", state: "Haryana", latitude: 29.1492, longitude: 75.7217, nearestMandi: "Hisar" }],
+      market: {
+        crops: [{
+          id: "onion", name: "Onion / Pyaaz", unit: "quintal", storageRisk: "high",
+          markets: [{ districtId: "hisar", name: "Hisar", history: [
+            { date: "2026-06-13", modal: 1880 }, { date: "2026-06-14", modal: 1910 }
+          ]}]
+        }]
+      },
+      diseases: [{ id: "unknown", name: "Unknown condition", symptoms: [], organicTreatment: ["Consult your local KVK or agriculture officer for diagnosis and organic treatment advice."], prevention: [] }],
+      zbnf: [],
+      calendar: []
+    };
+  }
 
   const district = findDistrict(knowledge, payload.districtId);
   const intent = detectIntent(payload.query);
@@ -369,14 +389,16 @@ module.exports = async function handler(req, res) {
       source: cropResolution.source
     },
     district,
-    cropMarket,
-    priceInfo,
+    cropMarket: { id: cropMarket.id, name: cropMarket.name, unit: cropMarket.unit, storageRisk: cropMarket.storageRisk },
+    priceInfo: { latest: priceInfo.latest, previous: priceInfo.previous, first: priceInfo.first },
     trend,
     weatherSummary: payload.weatherSummary || null,
-    marketSummary: payload.marketSummary || null,
-    zbnf: knowledge.zbnf.slice(0, 5),
-    cropCalendar: knowledge.calendar.filter((item) => item.cropId === cropMarket.id || item.cropId === "general"),
-    diseaseHints: knowledge.diseases.slice(0, 6)
+    marketSummary: payload.marketSummary
+      ? { latestPrice: payload.marketSummary.latestPrice, trend: payload.marketSummary.trend, signal: payload.marketSummary.signal }
+      : null,
+    zbnf: knowledge.zbnf.slice(0, 4),
+    cropCalendar: knowledge.calendar.filter((item) => item.cropId === cropMarket.id || item.cropId === "general").slice(0, 2),
+    diseaseHints: knowledge.diseases.slice(0, 4)
   };
 
   const langInstruction = payload.language === "en"
@@ -385,26 +407,40 @@ module.exports = async function handler(req, res) {
       ? "Respond ONLY in Hindi using Devanagari script."
       : "Respond ONLY in Hinglish (Hindi written in Roman script, mixed with simple English).";
 
-  const prompt = `
-You are Farming Consultant, a natural farming advisor.
+  const prompt = `You are Farming Consultant, a natural farming advisor for Indian farmers.
 ${langInstruction}
-Answer only from the provided context. Recommend organic and zero-chemical practices only.
-Always mention confidence. If unsure, recommend KVK/local agriculture officer verification.
-Keep voice_response short and farmer-friendly.
-If the farmer query mentions a crop that differs from the selected crop, prioritize requestedCrop.
-If requestedCrop.hasMarketData is false, do not invent mandi prices; say local mandi/eNAM verification is needed.
-User language: ${payload.language || "hinglish"}
-Farmer query: ${payload.query || ""}
-Context JSON: ${JSON.stringify(context)}
+Answer ONLY from the provided context JSON. Recommend organic and zero-chemical practices only.
+Always state confidence as a decimal between 0 and 1. If unsure, recommend KVK/local agriculture officer.
+Keep voice_response under 3 sentences, farmer-friendly. remedy_steps should have 2–4 actionable items.
+market_signal must be exactly one of: "sell", "hold", or "wait".
+If requestedCrop.hasMarketData is false, do NOT invent prices; advise local mandi/eNAM check.
+
+Farmer query: ${payload.query}
+Language: ${payload.language || "hinglish"}
+Context: ${JSON.stringify(context)}
 Safety note: ${safetyNote(payload.language)}
-Return strict JSON matching the schema.`;
+
+Return valid JSON ONLY — no markdown, no extra text. Required fields: voice_response, remedy_steps, confidence, market_signal, safety_note.`;
 
   try {
-    const result = await callGemini({
+    const rawResult = await callGemini({
       parts: [{ text: prompt }],
       schema: ADVISOR_SCHEMA,
       temperature: 0.25
     });
+
+    const result = {
+      voice_response: String(rawResult.voice_response || ""),
+      remedy_steps: Array.isArray(rawResult.remedy_steps) ? rawResult.remedy_steps : [],
+      confidence: typeof rawResult.confidence === "number" ? rawResult.confidence : 0.7,
+      market_signal: ["sell", "hold", "wait"].includes(rawResult.market_signal) ? rawResult.market_signal : "wait",
+      weather_alert: rawResult.weather_alert || null,
+      source_notes: rawResult.source_notes || [],
+      safety_note: String(rawResult.safety_note || safetyNote(payload.language))
+    };
+
+    if (!result.voice_response) throw new Error("Gemini returned empty voice_response");
+
     return sendJson(res, 200, {
       source: "Gemini + local RAG context",
       modelBacked: true,
@@ -412,7 +448,7 @@ Return strict JSON matching the schema.`;
     });
   } catch (error) {
     return sendJson(res, 200, {
-      source: "Local fallback",
+      source: process.env.GEMINI_API_KEY ? "Local fallback (Gemini error)" : "Local fallback (GEMINI_API_KEY not set in Vercel)",
       modelBacked: false,
       warning: error.message,
       result: fallbackAdvisor(payload, knowledge)

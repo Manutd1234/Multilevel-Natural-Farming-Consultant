@@ -63,7 +63,17 @@ module.exports = async function handler(req, res) {
     const approxBytes = Math.ceil(payload.image.data.length * 0.75);
     if (approxBytes > 5 * 1024 * 1024) return sendJson(res, 400, { error: "Image exceeds 5 MB limit" });
   }
-  const knowledge = loadKnowledge();
+
+  let knowledge;
+  try {
+    knowledge = loadKnowledge();
+  } catch (kbError) {
+    console.error("knowledge_base load failed:", kbError.message);
+    knowledge = {
+      diseases: [{ id: "unknown", name: "Unknown condition", symptoms: [], organicTreatment: ["Consult your local KVK or agriculture officer for diagnosis."], prevention: [] }],
+      zbnf: []
+    };
+  }
 
   const langInstruction = payload.language === "en"
     ? "Respond ONLY in English."

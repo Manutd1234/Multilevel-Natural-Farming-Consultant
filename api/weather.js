@@ -96,7 +96,14 @@ function summarizeWeather(data, district, language) {
 module.exports = async function handler(req, res) {
   if (req.method !== "GET") return sendJson(res, 405, { error: "Use GET /api/weather" });
 
-  const knowledge = loadKnowledge();
+  let knowledge;
+  try {
+    knowledge = loadKnowledge();
+  } catch (kbError) {
+    console.error("knowledge_base load failed:", kbError.message);
+    knowledge = { districts: [{ id: "hisar", name: "Hisar", state: "Haryana", latitude: 29.1492, longitude: 75.7217, nearestMandi: "Hisar" }] };
+  }
+
   const url = new URL(req.url, "http://localhost");
   const district = findDistrict(knowledge, url.searchParams.get("district") || "hisar");
   const language = url.searchParams.get("language") || "hinglish";

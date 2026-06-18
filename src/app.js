@@ -563,9 +563,9 @@ function applyLanguage({ resetQuery = false } = {}) {
   dom.replayButton.setAttribute("aria-label", t("answerTitle"));
   renderQuickPrompts();
   if (state.lastResult && state.lastResultType === "advisor") {
-    renderAdvisorResult(state.lastResult, state.lastResultSource);
+    renderAdvisorResult(state.lastResult, state.lastResultSource, { silent: true });
   } else if (state.lastResult && state.lastResultType === "disease") {
-    renderDiseaseResult(state.lastResult, state.lastResultSource);
+    renderDiseaseResult(state.lastResult, state.lastResultSource, { silent: true });
   }
 }
 
@@ -795,35 +795,36 @@ function renderAdvisorResult(result, source, { silent = false } = {}) {
   state.lastResult = result;
   state.lastResultType = "advisor";
   state.lastResultSource = source;
-  state.speakingText = result.voice_response;
-  dom.answerText.textContent = result.voice_response;
+  state.speakingText = result.voice_response || "";
+  dom.answerText.textContent = result.voice_response || "";
   dom.safetyLine.textContent = result.safety_note || t("defaultSafety");
+  const steps = Array.isArray(result.remedy_steps) ? result.remedy_steps : [];
   dom.resultGrid.innerHTML = `
     <article><strong>${escapeHtml(t("marketSignal"))}</strong><span class="${signalClass(result.market_signal)}">${escapeHtml(result.market_signal || "wait")}</span></article>
     <article><strong>${escapeHtml(t("confidence"))}</strong><span class="${confidenceClass(result.confidence || 0)}">${Math.round((result.confidence || 0) * 100)}%</span></article>
     <article><strong>${escapeHtml(t("weatherAlert"))}</strong><span>${escapeHtml(result.weather_alert || t("noAlert"))}</span></article>
     <article><strong>${escapeHtml(t("source"))}</strong><span>${escapeHtml(source)}</span></article>
-    <article class="wide"><strong>${escapeHtml(t("steps"))}</strong><ul>${listItems(result.remedy_steps)}</ul></article>
+    <article class="wide"><strong>${escapeHtml(t("steps"))}</strong><ul>${listItems(steps)}</ul></article>
   `;
-  if (!silent) speak(result.voice_response);
+  if (!silent) speak(state.speakingText);
 }
 
 function renderDiseaseResult(result, source, { silent = false } = {}) {
   state.lastResult = result;
   state.lastResultType = "disease";
   state.lastResultSource = source;
-  state.speakingText = result.voice_response;
-  dom.answerText.textContent = result.voice_response;
+  state.speakingText = result.voice_response || "";
+  dom.answerText.textContent = result.voice_response || "";
   dom.safetyLine.textContent = result.safety_note || t("defaultSafety");
   dom.resultGrid.innerHTML = `
-    <article><strong>${escapeHtml(t("possibleIssue"))}</strong><span>${escapeHtml(result.possible_issue)}</span></article>
+    <article><strong>${escapeHtml(t("possibleIssue"))}</strong><span>${escapeHtml(result.possible_issue || "")}</span></article>
     <article><strong>${escapeHtml(t("confidence"))}</strong><span class="${confidenceClass(result.confidence || 0)}">${Math.round((result.confidence || 0) * 100)}%</span></article>
     <article><strong>${escapeHtml(t("source"))}</strong><span>${escapeHtml(source)}</span></article>
     <article class="wide"><strong>${escapeHtml(t("visualSigns"))}</strong><ul>${listItems(result.visual_signs)}</ul></article>
     <article class="wide"><strong>${escapeHtml(t("organicTreatment"))}</strong><ul>${listItems(result.organic_treatment)}</ul></article>
     <article class="wide"><strong>${escapeHtml(t("escalateIf"))}</strong><ul>${listItems(result.escalation)}</ul></article>
   `;
-  if (!silent) speak(result.voice_response);
+  if (!silent) speak(state.speakingText);
 }
 
 function renderError(message) {
