@@ -9,6 +9,7 @@ const {
   callGemini,
   safetyNote
 } = require("../lib/shared");
+const { retrieve } = require("../lib/rag");
 
 const ADVISOR_SCHEMA = {
   type: "object",
@@ -379,6 +380,13 @@ module.exports = async function handler(req, res) {
   const cropMarket = cropResolution.cropMarket;
   const priceInfo = getLatestPrice(cropMarket, district.id);
   const trend = calcTrend(priceInfo);
+
+  // Lightweight RAG: pull only the KB chunks most relevant to this query
+  // (BM25 + bilingual synonyms) instead of injecting the whole knowledge base.
+  const retrievedDiseases = retrieve(`${payload.query} ${cropResolution.requestedCropName}`, knowledge, { types: ["disease"], k: 3 });
+  const retrievedZbnf = retrieve(payload.query, knowledge, { types: ["zbnf"], k: 3 });
+  const retrieval = [...retrievedDiseases, ...retrievedZbnf].map((item) => ({ type: item.type, title: item.title, score: item.score }));
+
   const context = {
     intent,
     selectedCropId: payload.cropId,
@@ -396,9 +404,9 @@ module.exports = async function handler(req, res) {
     marketSummary: payload.marketSummary
       ? { latestPrice: payload.marketSummary.latestPrice, trend: payload.marketSummary.trend, signal: payload.marketSummary.signal }
       : null,
-    zbnf: knowledge.zbnf.slice(0, 4),
+    zbnf: retrievedZbnf.map((item) => item.raw),
     cropCalendar: knowledge.calendar.filter((item) => item.cropId === cropMarket.id || item.cropId === "general").slice(0, 2),
-    diseaseHints: knowledge.diseases.slice(0, 4)
+    diseaseHints: retrievedDiseases.map((item) => item.raw)
   };
 
   const langInstruction = payload.language === "en"
@@ -444,6 +452,7 @@ Return valid JSON ONLY — no markdown, no extra text. Required fields: voice_re
     return sendJson(res, 200, {
       source: "Gemini + local RAG context",
       modelBacked: true,
+      retrieval,
       result
     });
   } catch (error) {
@@ -451,6 +460,7 @@ Return valid JSON ONLY — no markdown, no extra text. Required fields: voice_re
       source: process.env.GEMINI_API_KEY ? "Local fallback (Gemini error)" : "Local fallback (GEMINI_API_KEY not set in Vercel)",
       modelBacked: false,
       warning: error.message,
+      retrieval,
       result: fallbackAdvisor(payload, knowledge)
     });
   }

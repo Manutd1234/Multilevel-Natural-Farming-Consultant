@@ -1,4 +1,5 @@
 const { sendJson, readBody, loadKnowledge, callGemini, safetyNote } = require("../lib/shared");
+const { retrieve } = require("../lib/rag");
 
 const DISEASE_SCHEMA = {
   type: "object",
@@ -15,11 +16,15 @@ const DISEASE_SCHEMA = {
   required: ["possible_issue", "confidence", "organic_treatment", "voice_response", "safety_note"]
 };
 
-function localDiseaseFallback(payload, knowledge) {
+function localDiseaseFallback(payload, knowledge, retrievedDiseases) {
+  // Prefer the top RAG-retrieved disease (BM25 over symptoms/treatment); fall
+  // back to the legacy keyword match, then the first KB entry.
   const text = `${payload.description || ""}`.toLowerCase();
-  const match = knowledge.diseases.find((item) =>
-    item.symptoms.some((symptom) => text.includes(symptom.toLowerCase().split(" ")[0]))
-  ) || knowledge.diseases[0];
+  const match = retrievedDiseases?.[0]?.raw
+    || knowledge.diseases.find((item) =>
+      item.symptoms.some((symptom) => text.includes(symptom.toLowerCase().split(" ")[0]))
+    )
+    || knowledge.diseases[0];
   const language = payload.language || "hinglish";
   const voiceResponses = {
     en: `There may be ${match.name}, but confidence is low. Follow organic steps and confirm with KVK.`,
@@ -75,6 +80,13 @@ module.exports = async function handler(req, res) {
     };
   }
 
+  // Lightweight RAG: retrieve only the KB chunks relevant to the symptoms/crop
+  // (BM25 + bilingual synonyms) and inject those instead of the whole KB.
+  const retrievalQuery = `${payload.description || ""} ${payload.crop || ""}`.trim();
+  const retrievedDiseases = retrieve(retrievalQuery, knowledge, { types: ["disease"], k: 4 });
+  const retrievedZbnf = retrieve(retrievalQuery, knowledge, { types: ["zbnf"], k: 3 });
+  const retrieval = [...retrievedDiseases, ...retrievedZbnf].map((item) => ({ type: item.type, title: item.title, score: item.score }));
+
   const langInstruction = payload.language === "en"
     ? "Respond ONLY in English."
     : payload.language === "hi"
@@ -92,8 +104,8 @@ Language: ${payload.language || "hinglish"}
 Crop: ${payload.crop || "unknown"}
 District: ${payload.district || "unknown"}
 Symptoms: ${payload.description || "No text symptoms"}
-Organic disease knowledge JSONL: ${JSON.stringify(knowledge.diseases)}
-ZBNF practices: ${JSON.stringify(knowledge.zbnf)}
+Relevant organic disease knowledge (RAG-retrieved): ${JSON.stringify(retrievedDiseases.map((item) => item.raw))}
+Relevant ZBNF practices (RAG-retrieved): ${JSON.stringify(retrievedZbnf.map((item) => item.raw))}
 Return strict JSON matching schema.`;
 
   const parts = [];
@@ -112,6 +124,7 @@ Return strict JSON matching schema.`;
     return sendJson(res, 200, {
       source: "Gemini image/text triage + organic KB",
       modelBacked: true,
+      retrieval,
       result
     });
   } catch (error) {
@@ -119,7 +132,8 @@ Return strict JSON matching schema.`;
       source: "Local organic KB fallback",
       modelBacked: false,
       warning: error.message,
-      result: localDiseaseFallback(payload, knowledge)
+      retrieval,
+      result: localDiseaseFallback(payload, knowledge, retrievedDiseases)
     });
   }
 };

@@ -148,6 +148,18 @@
         <p class="answer-text" id="answerText">Ask a question, refresh signals, or upload a crop photo to begin.</p>
         <div class="result-grid" id="resultGrid"></div>
         <p class="safety-line" id="safetyLine">Prototype advice. Confirm severe crop issues and mandi prices locally.</p>
+
+        <div class="sms-box">
+          <span class="eyebrow" id="smsLabel">Send this advice as SMS</span>
+          <div class="sms-row">
+            <input id="smsPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="Phone with country code, e.g. +9198XXXXXXXX" />
+            <button class="primary-action" id="smsButton" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v12H7l-3 3V5Z" /><path d="M8 10h8M8 13h5" /></svg>
+              Send SMS
+            </button>
+          </div>
+          <p class="sms-status" id="smsStatus" hidden></p>
+        </div>
       </section>
     </main>
 
