@@ -16,7 +16,7 @@
           </svg>
         </div>
         <div>
-          <p id="brandTagline">Voice-first natural farming consultant — Gemini + Open-Meteo</p>
+          <p id="brandTagline">Voice-first natural farming consultant — ChatGPT + Open-Meteo + AgMarknet</p>
           <h1>Farming Consultant</h1>
         </div>
       </div>
@@ -31,123 +31,129 @@
     </header>
 
     <main class="app-shell">
-      <section class="hero-panel" aria-labelledby="hero-title">
-        <div class="hero-copy">
-          <p class="eyebrow" id="serviceStatus">Vercel-ready prototype</p>
-          <h2 id="hero-title">Bolkar pucho. Photo bhejo. Safe organic salah lo.</h2>
-          <p id="heroSubtitle">Weather, mandi trend, and crop disease triage for farmers moving to natural farming.</p>
-        </div>
+      <nav class="tab-list" role="tablist" aria-label="Farming Consultant tabs">
+        <button class="tab-button is-active" id="chatTab" type="button" role="tab" aria-selected="true" aria-controls="chatPanel" data-tab="chat">
+          Consultant Chat
+        </button>
+        <button class="tab-button" id="moduleOneTab" type="button" role="tab" aria-selected="false" aria-controls="moduleOnePanel" data-tab="module-one">
+          Module 1: Weather & Market
+        </button>
+        <button class="tab-button" id="moduleTwoTab" type="button" role="tab" aria-selected="false" aria-controls="moduleTwoPanel" data-tab="module-two">
+          Module 2: Disease
+        </button>
+      </nav>
 
-        <div class="voice-box" aria-label="Voice controls">
-          <button class="mic-button" id="recordButton" type="button" aria-label="Record voice">
-            <svg viewBox="0 0 48 48" aria-hidden="true">
-              <path d="M24 29c4.4 0 8-3.6 8-8v-7c0-4.4-3.6-8-8-8s-8 3.6-8 8v7c0 4.4 3.6 8 8 8Z" />
-              <path d="M10 21c0 7.7 6.3 14 14 14s14-6.3 14-14M24 35v7M17 42h14" />
-            </svg>
-          </button>
-          <p id="recordStatus">Tap to record — uses browser Voice API.</p>
-        </div>
-
-        <div class="query-row">
-          <input id="queryInput" type="text" value="Kya abhi pyaaz bechna chahiye? Kal barish hogi kya?" autocomplete="off" />
-          <button class="primary-action" id="askButton" type="button">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 14-7-4 14-3-6-7-1Z" /></svg>
-            Ask
-          </button>
-        </div>
-
-        <div class="quick-grid" id="quickGrid" aria-label="Quick prompts"></div>
-      </section>
-
-      <section class="context-bar" aria-label="Farm context">
-        <label class="field">
-          <span id="districtLabel">District</span>
-          <select id="districtSelect"></select>
-        </label>
-        <label class="field">
-          <span id="cropLabel">Crop</span>
-          <select id="cropSelect"></select>
-        </label>
-        <label class="field">
-          <span id="unitLabel">Land unit</span>
-          <select id="unitSelect">
-            <option value="acre">Acre</option>
-            <option value="bigha">Bigha</option>
-          </select>
-        </label>
-        <label class="field">
-          <span id="areaLabel">Area</span>
-          <input id="areaInput" type="number" min="0.25" max="100" step="0.25" value="2" />
-        </label>
-      </section>
-
-      <section class="module-tabs" aria-label="Feature modules">
-        <div class="tab-list" role="tablist" aria-label="Farming Consultant features">
-          <button class="tab-button is-active" id="moduleOneTab" type="button" role="tab" aria-selected="true" aria-controls="moduleOnePanel" data-tab="module-one">
-            Module 1: Weather & Market
-          </button>
-          <button class="tab-button" id="moduleTwoTab" type="button" role="tab" aria-selected="false" aria-controls="moduleTwoPanel" data-tab="module-two">
-            Module 2: Disease Treatment
-          </button>
-        </div>
-
-        <div class="tab-panel is-active" id="moduleOnePanel" role="tabpanel" aria-labelledby="moduleOneTab" data-tab-panel="module-one">
-          <article class="tool-panel">
-            <div class="panel-head">
-              <div>
-                <p class="eyebrow" id="moduleOneLabel">Module 1</p>
-                <h2 id="signalsTitle">Weather & Market Intelligence</h2>
-              </div>
-              <button class="icon-action" id="refreshSignals" type="button" aria-label="Refresh signals">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v6h-6" /></svg>
-              </button>
+      <!-- ============ TAB 1: CONSULTANT CHAT ============ -->
+      <section class="tab-panel is-active" id="chatPanel" role="tabpanel" aria-labelledby="chatTab" data-tab-panel="chat">
+        <article class="chat-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow" id="chatEyebrow">Consultant</p>
+              <h2 id="chatTitle">Ask the Farming Consultant</h2>
             </div>
-            <div class="signal-grid" id="signalGrid"></div>
-          </article>
-        </div>
-
-        <div class="tab-panel" id="moduleTwoPanel" role="tabpanel" aria-labelledby="moduleTwoTab" data-tab-panel="module-two" hidden>
-          <article class="tool-panel disease-panel">
-            <div class="panel-head">
-              <div>
-                <p class="eyebrow" id="moduleTwoLabel">Module 2</p>
-                <h2 id="diseaseTitle">Disease Identification & Organic Treatment</h2>
-              </div>
-            </div>
-
-            <div class="disease-tool">
-              <label class="upload-box" for="cropImage">
-                <span id="cropPhotoLabel">Crop photo</span>
-                <strong id="imageLabel">Upload/take leaf photo</strong>
-                <input id="cropImage" type="file" accept="image/*" capture="environment" />
-              </label>
-              <div class="image-preview" id="imagePreview"><span id="noPhotoLabel">No photo selected</span></div>
-              <label class="field symptom-field">
-                <span id="symptomLabel">Symptoms</span>
-                <textarea id="symptomInput" rows="4" placeholder="Example: Patte peele ho rahe hain, brown spots hain, rain ke baad badh gaya."></textarea>
-              </label>
-              <button class="primary-action disease-action" id="diseaseButton" type="button">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M5 8h14M7 16h10" /></svg>
-                Analyze disease
-              </button>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section class="answer-panel" aria-labelledby="answer-title">
-        <div class="panel-head">
-          <div>
-            <p class="eyebrow" id="answerEyebrow">Grounded response</p>
-            <h2 id="answer-title">Kisaan Mitra answer</h2>
           </div>
-          <button class="icon-action" id="replayButton" type="button" aria-label="Replay answer">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5ZM15 9a5 5 0 0 1 0 6M18 6a9 9 0 0 1 0 12" /></svg>
-          </button>
-        </div>
-        <p class="answer-text" id="answerText">Ask a question, refresh signals, or upload a crop photo to begin.</p>
-        <div class="result-grid" id="resultGrid"></div>
-        <p class="safety-line" id="safetyLine">Prototype advice. Confirm severe crop issues and mandi prices locally.</p>
+
+          <div class="chat-log" id="chatLog" aria-live="polite"></div>
+
+          <div class="chat-input-row">
+            <button class="icon-action mic-toggle" id="recordButton" type="button" aria-label="Record voice">
+              <svg viewBox="0 0 48 48" aria-hidden="true">
+                <path d="M24 29c4.4 0 8-3.6 8-8v-7c0-4.4-3.6-8-8-8s-8 3.6-8 8v7c0 4.4 3.6 8 8 8Z" />
+                <path d="M10 21c0 7.7 6.3 14 14 14s14-6.3 14-14M24 35v7M17 42h14" />
+              </svg>
+            </button>
+            <input id="queryInput" type="text" autocomplete="off" />
+            <button class="primary-action" id="askButton" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 14-7-4 14-3-6-7-1Z" /></svg>
+              Ask
+            </button>
+          </div>
+          <p class="record-status" id="recordStatus">Tap the mic to speak — uses browser Voice API.</p>
+
+          <div class="quick-grid" id="quickGrid" aria-label="Quick prompts"></div>
+        </article>
+      </section>
+
+      <!-- ============ TAB 2: MODULE 1 — WEATHER & MARKET ============ -->
+      <section class="tab-panel" id="moduleOnePanel" role="tabpanel" aria-labelledby="moduleOneTab" data-tab-panel="module-one" hidden>
+        <article class="context-bar" aria-label="Farm context">
+          <label class="field">
+            <span id="districtLabel">District</span>
+            <select id="districtSelect"></select>
+          </label>
+          <label class="field">
+            <span id="cropLabel">Crop</span>
+            <select id="cropSelect"></select>
+          </label>
+          <label class="field">
+            <span id="unitLabel">Land unit</span>
+            <select id="unitSelect">
+              <option value="acre">Acre</option>
+              <option value="bigha">Bigha</option>
+            </select>
+          </label>
+          <label class="field">
+            <span><span id="areaLabel">Area</span>: <output id="areaValue">2</output></span>
+            <input id="areaInput" type="range" min="0.5" max="20" step="0.5" value="2" />
+          </label>
+        </article>
+
+        <article class="tool-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow" id="moduleOneLabel">Module 1</p>
+              <h2 id="signalsTitle">Weather & Market Intelligence</h2>
+            </div>
+            <button class="icon-action" id="refreshSignals" type="button" aria-label="Refresh signals">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v6h-6" /></svg>
+            </button>
+          </div>
+          <div class="signal-grid" id="signalGrid"></div>
+        </article>
+      </section>
+
+      <!-- ============ TAB 3: MODULE 2 — DISEASE ============ -->
+      <section class="tab-panel" id="moduleTwoPanel" role="tabpanel" aria-labelledby="moduleTwoTab" data-tab-panel="module-two" hidden>
+        <article class="tool-panel disease-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow" id="moduleTwoLabel">Module 2</p>
+              <h2 id="diseaseTitle">Disease Identification & Organic Treatment</h2>
+            </div>
+          </div>
+
+          <div class="disease-tool">
+            <label class="upload-box" for="cropImage">
+              <span id="cropPhotoLabel">Crop photo</span>
+              <strong id="imageLabel">Upload/take leaf photo</strong>
+              <input id="cropImage" type="file" accept="image/*" capture="environment" />
+            </label>
+            <div class="image-preview" id="imagePreview"><span id="noPhotoLabel">No photo selected</span></div>
+            <label class="field symptom-field">
+              <span id="symptomLabel">Symptoms</span>
+              <textarea id="symptomInput" rows="4" placeholder="Example: Patte peele ho rahe hain, brown spots hain, rain ke baad badh gaya."></textarea>
+            </label>
+            <button class="primary-action disease-action" id="diseaseButton" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M5 8h14M7 16h10" /></svg>
+              Analyze disease
+            </button>
+          </div>
+        </article>
+
+        <article class="answer-panel" aria-labelledby="diseaseAnswerTitle">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow" id="diseaseAnswerEyebrow">Grounded response</p>
+              <h2 id="diseaseAnswerTitle">Disease result</h2>
+            </div>
+            <button class="icon-action" id="diseaseReplayButton" type="button" aria-label="Listen">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5ZM15 9a5 5 0 0 1 0 6M18 6a9 9 0 0 1 0 12" /></svg>
+            </button>
+          </div>
+          <p class="answer-text" id="diseaseAnswerText">Upload a crop photo or describe symptoms, then tap Analyze disease.</p>
+          <div class="result-grid" id="diseaseResultGrid"></div>
+          <p class="safety-line" id="diseaseSafetyLine">Prototype advice. Confirm severe crop issues locally.</p>
+        </article>
       </section>
     </main>
 

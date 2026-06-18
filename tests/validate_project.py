@@ -30,6 +30,8 @@ def test_required_files_exist() -> None:
         "api/transcribe.js",
         "api/weather.js",
         "lib/shared.js",
+        "lib/market.js",
+        "lib/rag.js",
         "knowledge_base/districts.json",
         "knowledge_base/market_fallback.json",
         "knowledge_base/diseases.jsonl",
@@ -80,7 +82,7 @@ def test_api_guardrails_and_integrations_are_present() -> None:
 def test_vercel_config_and_gitignore() -> None:
     vercel = read_json("vercel.json")
     gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
-    assert vercel["functions"]["api/*.js"]["maxDuration"] == 30
+    assert vercel["functions"]["api/*.js"]["maxDuration"] == 60
     assert "models/" in gitignore
 
 

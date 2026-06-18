@@ -229,11 +229,15 @@ button {
 
 .chip {
   padding: 0.7rem;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.32);
+  color: var(--leaf-deep);
+  background: #f4f8f1;
+  border-color: var(--line);
   text-align: left;
-  font-weight: 760;
+  font-weight: 720;
+}
+
+.chip:hover {
+  background: #e9f3e6;
 }
 
 .primary-action {
@@ -298,7 +302,7 @@ button {
 
 .tab-list {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.5rem;
   padding: 0.45rem;
   border: 1px solid var(--line);
@@ -574,4 +578,179 @@ button {
 .sparkline {
   height: 72px;
   overflow: visible;
+}
+
+/* ===== Tab 1: Consultant chat ===== */
+.chat-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 10px 24px rgba(36, 43, 39, 0.06);
+  padding: clamp(1rem, 3vw, 1.35rem);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-height: 16rem;
+  max-height: 52vh;
+  overflow-y: auto;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfdfa;
+}
+
+.chat-msg {
+  display: flex;
+}
+
+.chat-msg.user {
+  justify-content: flex-end;
+}
+
+.chat-msg.assistant {
+  justify-content: flex-start;
+}
+
+.chat-bubble {
+  max-width: 88%;
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  line-height: 1.5;
+  font-size: 0.98rem;
+}
+
+.chat-msg.user .chat-bubble {
+  color: #fff;
+  background: var(--leaf-deep);
+  border-bottom-right-radius: 3px;
+}
+
+.chat-msg.assistant .chat-bubble {
+  color: var(--ink);
+  background: #eef3ea;
+  border: 1px solid var(--line);
+  border-bottom-left-radius: 3px;
+}
+
+.chat-bubble-error {
+  color: var(--danger);
+  background: #fdf1e7 !important;
+  border-color: #e6c9a8 !important;
+}
+
+.chat-voice {
+  margin: 0 0 0.45rem;
+  font-weight: 640;
+}
+
+.chat-steps {
+  margin: 0.2rem 0 0.5rem;
+  padding-left: 1.1rem;
+}
+
+.chat-steps li {
+  margin-bottom: 0.25rem;
+}
+
+.chat-alert {
+  margin: 0.2rem 0;
+  color: var(--sky);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.chat-meta {
+  font-size: 0.85rem;
+  color: var(--muted);
+  padding-top: 0.35rem;
+  border-top: 1px dashed var(--line);
+}
+
+.chat-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.chat-listen {
+  border: 1px solid var(--leaf);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--leaf-deep);
+  padding: 0.3rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 760;
+}
+
+.chat-listen:hover {
+  background: #eef7ee;
+}
+
+.chat-source {
+  font-size: 0.78rem;
+  color: var(--sky);
+  font-weight: 700;
+}
+
+.chat-safety {
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+  color: var(--danger);
+}
+
+.chat-typing {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.chat-input-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.chat-input-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 2.85rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 0.85rem;
+  color: var(--ink);
+  background: #fff;
+}
+
+.mic-toggle.is-recording {
+  color: #fff;
+  background: var(--sun);
+  border-color: var(--sun);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.record-status {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+/* Range slider (adjustable area bar) */
+.field input[type="range"] {
+  width: 100%;
+  min-height: 2.85rem;
+  padding: 0;
+  accent-color: var(--leaf);
+  background: transparent;
+  border: 0;
+}
+
+.field output {
+  font-weight: 800;
+  color: var(--leaf-deep);
 }

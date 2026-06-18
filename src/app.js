@@ -8,15 +8,15 @@ const state = {
   area: 2,
   image: null,
   lastSignals: null,
-  lastResult: null,
-  lastResultType: null,
-  lastResultSource: null,
+  diseaseResult: null,
+  diseaseSource: null,
+  diseaseSpeakText: "",
+  chatCount: 0,
   mediaRecorder: null,
   chunks: [],
-  speakingText: "",
   advisorRequestId: 0,
   diseaseRequestId: 0,
-  activeTab: "module-one"
+  activeTab: "chat"
 };
 
 const FALLBACK_DISTRICTS = [
@@ -180,50 +180,57 @@ const FALLBACK_MARKET = {
   ]
 };
 
+const q = (selector) => document.querySelector(selector);
 const dom = {
-  language: document.querySelector("#language"),
-  brandTagline: document.querySelector("#brandTagline"),
-  languageLabel: document.querySelector("#languageLabel"),
-  districtSelect: document.querySelector("#districtSelect"),
-  cropSelect: document.querySelector("#cropSelect"),
-  unitSelect: document.querySelector("#unitSelect"),
-  areaInput: document.querySelector("#areaInput"),
-  districtLabel: document.querySelector("#districtLabel"),
-  cropLabel: document.querySelector("#cropLabel"),
-  unitLabel: document.querySelector("#unitLabel"),
-  areaLabel: document.querySelector("#areaLabel"),
-  recordButton: document.querySelector("#recordButton"),
-  recordStatus: document.querySelector("#recordStatus"),
-  queryInput: document.querySelector("#queryInput"),
-  askButton: document.querySelector("#askButton"),
-  quickGrid: document.querySelector("#quickGrid"),
+  language: q("#language"),
+  brandTagline: q("#brandTagline"),
+  languageLabel: q("#languageLabel"),
+  // tabs
   moduleTabs: document.querySelectorAll("[data-tab]"),
   modulePanels: document.querySelectorAll("[data-tab-panel]"),
-  moduleOneTab: document.querySelector("#moduleOneTab"),
-  moduleTwoTab: document.querySelector("#moduleTwoTab"),
-  refreshSignals: document.querySelector("#refreshSignals"),
-  signalGrid: document.querySelector("#signalGrid"),
-  heroTitle: document.querySelector("#hero-title"),
-  heroSubtitle: document.querySelector("#heroSubtitle"),
-  moduleOneLabel: document.querySelector("#moduleOneLabel"),
-  moduleTwoLabel: document.querySelector("#moduleTwoLabel"),
-  signalsTitle: document.querySelector("#signalsTitle"),
-  diseaseTitle: document.querySelector("#diseaseTitle"),
-  cropPhotoLabel: document.querySelector("#cropPhotoLabel"),
-  cropImage: document.querySelector("#cropImage"),
-  imageLabel: document.querySelector("#imageLabel"),
-  imagePreview: document.querySelector("#imagePreview"),
-  noPhotoLabel: document.querySelector("#noPhotoLabel"),
-  symptomLabel: document.querySelector("#symptomLabel"),
-  symptomInput: document.querySelector("#symptomInput"),
-  diseaseButton: document.querySelector("#diseaseButton"),
-  replayButton: document.querySelector("#replayButton"),
-  answerEyebrow: document.querySelector("#answerEyebrow"),
-  answerTitle: document.querySelector("#answer-title"),
-  answerText: document.querySelector("#answerText"),
-  resultGrid: document.querySelector("#resultGrid"),
-  safetyLine: document.querySelector("#safetyLine"),
-  serviceStatus: document.querySelector("#serviceStatus")
+  chatTab: q("#chatTab"),
+  moduleOneTab: q("#moduleOneTab"),
+  moduleTwoTab: q("#moduleTwoTab"),
+  // Tab 1: chat
+  chatEyebrow: q("#chatEyebrow"),
+  chatTitle: q("#chatTitle"),
+  chatLog: q("#chatLog"),
+  recordButton: q("#recordButton"),
+  recordStatus: q("#recordStatus"),
+  queryInput: q("#queryInput"),
+  askButton: q("#askButton"),
+  quickGrid: q("#quickGrid"),
+  // Tab 2: Module 1 context + signals
+  districtSelect: q("#districtSelect"),
+  cropSelect: q("#cropSelect"),
+  unitSelect: q("#unitSelect"),
+  areaInput: q("#areaInput"),
+  areaValue: q("#areaValue"),
+  districtLabel: q("#districtLabel"),
+  cropLabel: q("#cropLabel"),
+  unitLabel: q("#unitLabel"),
+  areaLabel: q("#areaLabel"),
+  moduleOneLabel: q("#moduleOneLabel"),
+  signalsTitle: q("#signalsTitle"),
+  refreshSignals: q("#refreshSignals"),
+  signalGrid: q("#signalGrid"),
+  // Tab 3: Module 2 disease + output
+  moduleTwoLabel: q("#moduleTwoLabel"),
+  diseaseTitle: q("#diseaseTitle"),
+  cropPhotoLabel: q("#cropPhotoLabel"),
+  cropImage: q("#cropImage"),
+  imageLabel: q("#imageLabel"),
+  imagePreview: q("#imagePreview"),
+  noPhotoLabel: q("#noPhotoLabel"),
+  symptomLabel: q("#symptomLabel"),
+  symptomInput: q("#symptomInput"),
+  diseaseButton: q("#diseaseButton"),
+  diseaseAnswerEyebrow: q("#diseaseAnswerEyebrow"),
+  diseaseAnswerTitle: q("#diseaseAnswerTitle"),
+  diseaseReplayButton: q("#diseaseReplayButton"),
+  diseaseAnswerText: q("#diseaseAnswerText"),
+  diseaseResultGrid: q("#diseaseResultGrid"),
+  diseaseSafetyLine: q("#diseaseSafetyLine")
 };
 
 const COPY = {
@@ -253,7 +260,7 @@ const COPY = {
     moduleOne: "Module 1",
     moduleTwo: "Module 2",
     moduleOneTab: "Module 1: Weather & Market",
-    moduleTwoTab: "Module 2: Disease Treatment",
+    moduleTwoTab: "Module 2: Disease",
     signalsTitle: "Weather & Market Intelligence",
     diseaseTitle: "Disease Identification & Organic Treatment",
     cropPhoto: "Crop photo",
@@ -289,6 +296,13 @@ const COPY = {
     diseaseFallback: "Local disease KB fallback",
     geminiRag: "Gemini + local RAG",
     geminiDisease: "Gemini image triage",
+    chatTab: "Consultant Chat",
+    chatTitle: "Farming Consultant se poochhein",
+    chatEyebrow: "Consultant",
+    chatGreeting: "Namaste! Mandi bhav, mausam, ya farming salah ke liye poochhein. Crop disease ke liye Module 2 use karein.",
+    listen: "Suno",
+    diseaseResultTitle: "Disease result",
+    youLabel: "Aap",
     quickPrompts: [
       "Kya abhi pyaaz bechna chahiye?",
       "Kal barish hogi kya? Neem spray kab karun?",
@@ -322,7 +336,7 @@ const COPY = {
     moduleOne: "मॉड्यूल 1",
     moduleTwo: "मॉड्यूल 2",
     moduleOneTab: "मॉड्यूल 1: मौसम और मंडी",
-    moduleTwoTab: "मॉड्यूल 2: रोग उपचार",
+    moduleTwoTab: "मॉड्यूल 2: रोग",
     signalsTitle: "मौसम और मंडी जानकारी",
     diseaseTitle: "रोग पहचान और जैविक उपचार",
     cropPhoto: "फसल फोटो",
@@ -358,6 +372,13 @@ const COPY = {
     diseaseFallback: "Local disease KB fallback",
     geminiRag: "Gemini + local RAG",
     geminiDisease: "Gemini image triage",
+    chatTab: "सलाहकार चैट",
+    chatTitle: "किसान सलाहकार से पूछें",
+    chatEyebrow: "सलाहकार",
+    chatGreeting: "नमस्ते! मंडी भाव, मौसम या खेती की सलाह के लिए पूछें। फसल रोग के लिए Module 2 इस्तेमाल करें।",
+    listen: "सुनें",
+    diseaseResultTitle: "रोग परिणाम",
+    youLabel: "आप",
     quickPrompts: [
       "क्या अभी प्याज बेचना चाहिए?",
       "कल बारिश होगी क्या? नीम spray कब करूं?",
@@ -391,7 +412,7 @@ const COPY = {
     moduleOne: "Module 1",
     moduleTwo: "Module 2",
     moduleOneTab: "Module 1: Weather & Market",
-    moduleTwoTab: "Module 2: Disease Treatment",
+    moduleTwoTab: "Module 2: Disease",
     signalsTitle: "Weather & Market Intelligence",
     diseaseTitle: "Disease Identification & Organic Treatment",
     cropPhoto: "Crop photo",
@@ -427,6 +448,13 @@ const COPY = {
     diseaseFallback: "Local disease KB fallback",
     geminiRag: "Gemini + local RAG",
     geminiDisease: "Gemini image triage",
+    chatTab: "Consultant Chat",
+    chatTitle: "Ask the Farming Consultant",
+    chatEyebrow: "Consultant",
+    chatGreeting: "Namaste! Ask about mandi prices, weather, or farming advice. For crop disease, use Module 2.",
+    listen: "Listen",
+    diseaseResultTitle: "Disease result",
+    youLabel: "You",
     quickPrompts: [
       "Should I sell onions now?",
       "Will it rain tomorrow? When should I spray neem?",
@@ -474,6 +502,9 @@ function populateControls() {
   ).join("");
   dom.districtSelect.value = state.districtId;
   dom.cropSelect.value = state.cropId;
+  dom.unitSelect.value = state.unit;
+  dom.areaInput.value = state.area;
+  if (dom.areaValue) dom.areaValue.textContent = state.area;
 }
 
 function bindEvents() {
@@ -492,7 +523,10 @@ function bindEvents() {
     refreshSignals();
   });
   dom.unitSelect.addEventListener("change", () => state.unit = dom.unitSelect.value);
-  dom.areaInput.addEventListener("input", () => state.area = Number(dom.areaInput.value) || 1);
+  dom.areaInput.addEventListener("input", () => {
+    state.area = Number(dom.areaInput.value) || 1;
+    if (dom.areaValue) dom.areaValue.textContent = state.area;
+  });
   dom.moduleTabs.forEach((button) => {
     button.addEventListener("click", () => switchTab(button.dataset.tab));
   });
@@ -504,7 +538,12 @@ function bindEvents() {
   dom.cropImage.addEventListener("change", handleImage);
   dom.diseaseButton.addEventListener("click", analyzeDisease);
   dom.recordButton.addEventListener("click", toggleRecording);
-  dom.replayButton.addEventListener("click", () => speak(state.speakingText));
+  // Voice plays ONLY on a button click (no auto-speak on render).
+  dom.diseaseReplayButton.addEventListener("click", () => speak(state.diseaseSpeakText));
+  dom.chatLog.addEventListener("click", (event) => {
+    const button = event.target.closest(".chat-listen");
+    if (button) speak(button.closest(".chat-msg")?.dataset.voice || "");
+  });
 }
 
 function getCopy() {
@@ -528,45 +567,56 @@ function applyLanguage({ resetQuery = false } = {}) {
   document.documentElement.lang = t("htmlLang");
   dom.brandTagline.textContent = t("brandTagline");
   dom.languageLabel.textContent = t("languageLabel");
-  dom.serviceStatus.textContent = t("serviceStatus");
-  dom.heroTitle.textContent = t("heroTitle");
-  dom.heroSubtitle.textContent = t("heroSubtitle");
+
+  // Tabs
+  dom.chatTab.textContent = t("chatTab");
+  dom.moduleOneTab.textContent = t("moduleOneTab");
+  dom.moduleTwoTab.textContent = t("moduleTwoTab");
+
+  // Tab 1: chat
+  dom.chatEyebrow.textContent = t("chatEyebrow");
+  dom.chatTitle.textContent = t("chatTitle");
   dom.recordStatus.textContent = t("recordStatus");
   dom.queryInput.placeholder = t("queryPlaceholder");
   if (resetQuery) dom.queryInput.value = t("defaultQuery");
   setButtonLabel(dom.askButton, t("ask"));
+  dom.recordButton.setAttribute("aria-label", t("recordStatus"));
+
+  // Tab 2: Module 1
   dom.districtLabel.textContent = t("district");
   dom.cropLabel.textContent = t("crop");
   dom.unitLabel.textContent = t("landUnit");
   dom.areaLabel.textContent = t("area");
   dom.moduleOneLabel.textContent = t("moduleOne");
-  dom.moduleTwoLabel.textContent = t("moduleTwo");
-  dom.moduleOneTab.textContent = t("moduleOneTab");
-  dom.moduleTwoTab.textContent = t("moduleTwoTab");
   dom.signalsTitle.textContent = t("signalsTitle");
+  dom.refreshSignals.setAttribute("aria-label", t("signalsTitle"));
+
+  // Tab 3: Module 2
+  dom.moduleTwoLabel.textContent = t("moduleTwo");
   dom.diseaseTitle.textContent = t("diseaseTitle");
   dom.cropPhotoLabel.textContent = t("cropPhoto");
   if (!state.image) {
     dom.imageLabel.textContent = t("uploadPhoto");
     dom.imagePreview.innerHTML = `<span id="noPhotoLabel">${escapeHtml(t("noPhoto"))}</span>`;
-    dom.noPhotoLabel = document.querySelector("#noPhotoLabel");
   }
   dom.symptomLabel.textContent = t("symptoms");
   dom.symptomInput.placeholder = t("symptomsPlaceholder");
   setButtonLabel(dom.diseaseButton, t("analyzeDisease"));
-  dom.answerEyebrow.textContent = t("answerEyebrow");
-  dom.answerTitle.textContent = t("answerTitle");
-  if (!state.speakingText) dom.answerText.textContent = t("emptyAnswer");
-  dom.safetyLine.textContent = t("defaultSafety");
-  dom.recordButton.setAttribute("aria-label", t("recordStatus"));
-  dom.refreshSignals.setAttribute("aria-label", t("signalsTitle"));
-  dom.replayButton.setAttribute("aria-label", t("answerTitle"));
+  dom.diseaseAnswerEyebrow.textContent = t("answerEyebrow");
+  dom.diseaseAnswerTitle.textContent = t("diseaseResultTitle");
+  dom.diseaseReplayButton.setAttribute("aria-label", t("listen"));
+  if (!state.diseaseResult) dom.diseaseAnswerText.textContent = t("emptyAnswer");
+
   renderQuickPrompts();
-  if (state.lastResult && state.lastResultType === "advisor") {
-    renderAdvisorResult(state.lastResult, state.lastResultSource, { silent: true });
-  } else if (state.lastResult && state.lastResultType === "disease") {
-    renderDiseaseResult(state.lastResult, state.lastResultSource, { silent: true });
-  }
+  ensureChatGreeting();
+  if (state.diseaseResult) renderDiseaseResult(state.diseaseResult, state.diseaseSource, { silent: true });
+}
+
+// Seed the chat with a greeting bubble while it's empty (re-localizes if the
+// language changes before the first question).
+function ensureChatGreeting() {
+  if (state.chatCount > 0) return;
+  dom.chatLog.innerHTML = `<div class="chat-msg assistant"><div class="chat-bubble">${escapeHtml(t("chatGreeting"))}</div></div>`;
 }
 
 function renderQuickPrompts() {
@@ -577,14 +627,12 @@ function renderQuickPrompts() {
     const button = event.target.closest("[data-prompt]");
     if (!button) return;
     dom.queryInput.value = button.dataset.prompt;
-    if (/disease|spots|leaf|leaves|रोग|पत्त|धब्ब/i.test(button.dataset.prompt)) switchTab("module-two");
-    else switchTab("module-one");
     askAdvisor();
   };
 }
 
 function switchTab(tabId) {
-  state.activeTab = tabId || "module-one";
+  state.activeTab = tabId || "chat";
   dom.moduleTabs.forEach((button) => {
     const isActive = button.dataset.tab === state.activeTab;
     button.classList.toggle("is-active", isActive);
@@ -635,7 +683,9 @@ async function askAdvisor() {
     dom.queryInput.focus();
     return;
   }
-  const requestId = ++state.advisorRequestId;
+  appendChatUser(query);
+  dom.queryInput.value = "";
+  const pending = appendChatPending();
   setBusy(dom.askButton, true, t("thinking"));
   try {
     const payload = await fetchJson("/api/advisor", {
@@ -643,13 +693,11 @@ async function askAdvisor() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(buildContext({ query }))
     });
-    if (requestId !== state.advisorRequestId) return;
-    renderAdvisorResult(payload.result, payload.source || (payload.modelBacked ? t("geminiRag") : t("localFallback")));
+    renderChatAnswer(pending, payload.result, payload.source || (payload.modelBacked ? t("geminiRag") : t("localFallback")));
   } catch (error) {
-    if (requestId !== state.advisorRequestId) return;
-    renderError(error.message);
+    renderChatError(pending, error.message);
   } finally {
-    if (requestId === state.advisorRequestId) setBusy(dom.askButton, false, t("ask"));
+    setBusy(dom.askButton, false, t("ask"));
   }
 }
 
@@ -679,7 +727,8 @@ function handleImage() {
 async function analyzeDisease() {
   const description = dom.symptomInput.value.trim();
   if (!state.image && !description) {
-    renderError(t("addSymptoms"));
+    dom.diseaseAnswerText.textContent = t("addSymptoms");
+    dom.diseaseResultGrid.innerHTML = "";
     return;
   }
   const requestId = ++state.diseaseRequestId;
@@ -702,7 +751,8 @@ async function analyzeDisease() {
     renderDiseaseResult(payload.result, payload.source || (payload.modelBacked ? t("geminiDisease") : t("diseaseFallback")));
   } catch (error) {
     if (requestId !== state.diseaseRequestId) return;
-    renderError(error.message);
+    dom.diseaseAnswerText.textContent = error.message;
+    dom.diseaseResultGrid.innerHTML = "";
   } finally {
     if (requestId === state.diseaseRequestId) setBusy(dom.diseaseButton, false, t("analyzeDisease"));
   }
@@ -791,32 +841,66 @@ function signalClass(signal) {
   return map[signal] || "";
 }
 
-function renderAdvisorResult(result, source, { silent = false } = {}) {
-  state.lastResult = result;
-  state.lastResultType = "advisor";
-  state.lastResultSource = source;
-  state.speakingText = result.voice_response || "";
-  dom.answerText.textContent = result.voice_response || "";
-  dom.safetyLine.textContent = result.safety_note || t("defaultSafety");
-  const steps = Array.isArray(result.remedy_steps) ? result.remedy_steps : [];
-  dom.resultGrid.innerHTML = `
-    <article><strong>${escapeHtml(t("marketSignal"))}</strong><span class="${signalClass(result.market_signal)}">${escapeHtml(result.market_signal || "wait")}</span></article>
-    <article><strong>${escapeHtml(t("confidence"))}</strong><span class="${confidenceClass(result.confidence || 0)}">${Math.round((result.confidence || 0) * 100)}%</span></article>
-    <article><strong>${escapeHtml(t("weatherAlert"))}</strong><span>${escapeHtml(result.weather_alert || t("noAlert"))}</span></article>
-    <article><strong>${escapeHtml(t("source"))}</strong><span>${escapeHtml(source)}</span></article>
-    <article class="wide"><strong>${escapeHtml(t("steps"))}</strong><ul>${listItems(steps)}</ul></article>
-  `;
-  if (!silent) speak(state.speakingText);
+// ---- Consultant chat (Tab 1) ----
+function scrollChat() {
+  dom.chatLog.scrollTop = dom.chatLog.scrollHeight;
 }
 
-function renderDiseaseResult(result, source, { silent = false } = {}) {
-  state.lastResult = result;
-  state.lastResultType = "disease";
-  state.lastResultSource = source;
-  state.speakingText = result.voice_response || "";
-  dom.answerText.textContent = result.voice_response || "";
-  dom.safetyLine.textContent = result.safety_note || t("defaultSafety");
-  dom.resultGrid.innerHTML = `
+function appendChatUser(text) {
+  state.chatCount += 1;
+  const div = document.createElement("div");
+  div.className = "chat-msg user";
+  div.innerHTML = `<div class="chat-bubble">${escapeHtml(text)}</div>`;
+  dom.chatLog.appendChild(div);
+  scrollChat();
+}
+
+function appendChatPending() {
+  const div = document.createElement("div");
+  div.className = "chat-msg assistant";
+  div.innerHTML = `<div class="chat-bubble"><span class="chat-typing">${escapeHtml(t("thinking"))}</span></div>`;
+  dom.chatLog.appendChild(div);
+  scrollChat();
+  return div;
+}
+
+function renderChatAnswer(el, result, source) {
+  const voice = result.voice_response || "";
+  el.dataset.voice = voice; // read by the per-message Listen button
+  const steps = Array.isArray(result.remedy_steps) ? result.remedy_steps : [];
+  const meta = [
+    `${escapeHtml(t("marketSignal"))}: <span class="${signalClass(result.market_signal)}">${escapeHtml(result.market_signal || "wait")}</span>`,
+    `${escapeHtml(t("confidence"))}: <span class="${confidenceClass(result.confidence || 0)}">${Math.round((result.confidence || 0) * 100)}%</span>`
+  ].join(" · ");
+  el.innerHTML = `
+    <div class="chat-bubble">
+      <p class="chat-voice">${escapeHtml(voice)}</p>
+      ${steps.length ? `<ul class="chat-steps">${listItems(steps)}</ul>` : ""}
+      ${result.weather_alert ? `<p class="chat-alert">${escapeHtml(t("weatherAlert"))}: ${escapeHtml(result.weather_alert)}</p>` : ""}
+      <div class="chat-meta">${meta}</div>
+      <div class="chat-foot">
+        <button class="chat-listen" type="button">🔊 ${escapeHtml(t("listen"))}</button>
+        <span class="chat-source">${escapeHtml(source)}</span>
+      </div>
+      ${result.safety_note ? `<p class="chat-safety">${escapeHtml(result.safety_note)}</p>` : ""}
+    </div>`;
+  scrollChat();
+}
+
+function renderChatError(el, message) {
+  el.dataset.voice = "";
+  el.innerHTML = `<div class="chat-bubble chat-bubble-error">${escapeHtml(message)}</div>`;
+  scrollChat();
+}
+
+// ---- Disease output (Tab 3) ----
+function renderDiseaseResult(result, source) {
+  state.diseaseResult = result;
+  state.diseaseSource = source;
+  state.diseaseSpeakText = result.voice_response || "";
+  dom.diseaseAnswerText.textContent = result.voice_response || "";
+  dom.diseaseSafetyLine.textContent = result.safety_note || t("defaultSafety");
+  dom.diseaseResultGrid.innerHTML = `
     <article><strong>${escapeHtml(t("possibleIssue"))}</strong><span>${escapeHtml(result.possible_issue || "")}</span></article>
     <article><strong>${escapeHtml(t("confidence"))}</strong><span class="${confidenceClass(result.confidence || 0)}">${Math.round((result.confidence || 0) * 100)}%</span></article>
     <article><strong>${escapeHtml(t("source"))}</strong><span>${escapeHtml(source)}</span></article>
@@ -824,12 +908,14 @@ function renderDiseaseResult(result, source, { silent = false } = {}) {
     <article class="wide"><strong>${escapeHtml(t("organicTreatment"))}</strong><ul>${listItems(result.organic_treatment)}</ul></article>
     <article class="wide"><strong>${escapeHtml(t("escalateIf"))}</strong><ul>${listItems(result.escalation)}</ul></article>
   `;
-  if (!silent) speak(state.speakingText);
+  // Voice plays only when the Listen button is clicked.
 }
 
+// Boot-time / fatal errors surface in the chat log.
 function renderError(message) {
-  dom.answerText.textContent = message;
-  dom.resultGrid.innerHTML = "";
+  if (dom.chatLog) {
+    dom.chatLog.innerHTML = `<div class="chat-msg assistant"><div class="chat-bubble chat-bubble-error">${escapeHtml(message)}</div></div>`;
+  }
 }
 
 function drawSparklines() {
