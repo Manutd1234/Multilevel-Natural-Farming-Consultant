@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "node scripts/dev-server.mjs",
     "download:whisper": "node scripts/download-whisper.mjs --model openai/whisper-small",
-    "validate": "python3 tests/validate_project.py"
+    "validate": "python3 tests/validate_project.py",
+    "test:api": "node tests/api_tests.js"
   }
 }

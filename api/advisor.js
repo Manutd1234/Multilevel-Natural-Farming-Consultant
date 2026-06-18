@@ -13,6 +13,7 @@ const {
   coerceConfidence
 } = require("../lib/shared");
 const { retrieve } = require("../lib/rag");
+const { resolveMarketSummary } = require("../lib/market");
 
 const ADVISOR_SCHEMA = {
   type: "object",
@@ -129,22 +130,42 @@ function marketDecision(trend, storageRisk, language) {
   return "Local price aur storage risk clear hone tak wait karein ya sirf small portion bechein.";
 }
 
-function fallbackAdvisor(payload, knowledge) {
+function fallbackAdvisor(payload, knowledge, marketSummary) {
   const district = findDistrict(knowledge, payload.districtId);
   const cropResolution = resolveCropForQuery(payload, knowledge);
   const cropMarket = cropResolution.cropMarket;
-  const priceInfo = getLatestPrice(cropMarket, district.id);
-  const trend = calcTrend(priceInfo);
   const language = payload.language || "hinglish";
   const intent = detectIntent(payload.query);
+  const hasMarketData = cropResolution.hasMarketData;
+
+  // Prefer the live AgMarknet summary; fall back to the seeded KB price series.
+  let latestModal;
+  let unit;
+  let storageRisk;
+  let trend;
+  let marketSignal;
+  if (marketSummary && hasMarketData) {
+    latestModal = marketSummary.latestPrice;
+    unit = marketSummary.unit || cropMarket.unit;
+    storageRisk = marketSummary.storageRisk || cropMarket.storageRisk;
+    trend = marketSummary.trend || { label: "", percent: 0, signal: marketSummary.signal || "wait" };
+    marketSignal = marketSummary.signal || trend.signal || "wait";
+  } else {
+    const priceInfo = getLatestPrice(cropMarket, district.id);
+    trend = calcTrend(priceInfo);
+    latestModal = priceInfo.latest.modal;
+    unit = cropMarket.unit;
+    storageRisk = cropMarket.storageRisk;
+    marketSignal = trend.signal;
+  }
+
   const calendar = calendarFor(knowledge, cropResolution.requestedCropId);
   const diseaseHint = diseaseHintForQuery(payload.query, knowledge);
   const weatherAlert = localizedWeatherAlert(payload.weatherSummary, language);
-  const decision = marketDecision(trend, cropMarket.storageRisk, language);
+  const decision = marketDecision(trend, storageRisk, language);
   const cropName = cropResolution.requestedCropName;
-  const hasMarketData = cropResolution.hasMarketData;
   const priceLine = hasMarketData
-    ? `₹${priceInfo.latest.modal}/${cropMarket.unit}, ${trend.label} ${trend.percent}%`
+    ? `₹${latestModal}/${unit}, ${trend.label} ${trend.percent}%`
     : null;
 
   let response;
@@ -290,7 +311,7 @@ function fallbackAdvisor(payload, knowledge) {
         remedy_steps: [
           "Confirm today's mandi rate and arrival volume before selling.",
           decision,
-          cropMarket.storageRisk === "high" ? "Because storage risk is high, avoid holding the full crop without cold or safe storage." : "Hold only the quantity you can store safely."
+          storageRisk === "high" ? "Because storage risk is high, avoid holding the full crop without cold or safe storage." : "Hold only the quantity you can store safely."
         ]
       },
       hi: {
@@ -298,7 +319,7 @@ function fallbackAdvisor(payload, knowledge) {
         remedy_steps: [
           "बेचने से पहले आज का mandi rate और arrival volume confirm करें।",
           decision,
-          cropMarket.storageRisk === "high" ? "Storage risk high है, इसलिए safe/cold storage के बिना पूरी फसल hold न करें।" : "सिर्फ उतनी quantity hold करें जिसे safely store कर सकते हैं।"
+          storageRisk === "high" ? "Storage risk high है, इसलिए safe/cold storage के बिना पूरी फसल hold न करें।" : "सिर्फ उतनी quantity hold करें जिसे safely store कर सकते हैं।"
         ]
       },
       hinglish: {
@@ -306,7 +327,7 @@ function fallbackAdvisor(payload, knowledge) {
         remedy_steps: [
           "Bechne se pehle aaj ka mandi rate aur arrival volume confirm karein.",
           decision,
-          cropMarket.storageRisk === "high" ? "Storage risk high hai, isliye safe/cold storage ke bina full crop hold na karein." : "Sirf utni quantity hold karein jise safely store kar sakte hain."
+          storageRisk === "high" ? "Storage risk high hai, isliye safe/cold storage ke bina full crop hold na karein." : "Sirf utni quantity hold karein jise safely store kar sakte hain."
         ]
       }
     }[language] || {};
@@ -343,9 +364,13 @@ function fallbackAdvisor(payload, knowledge) {
     voice_response: response.voice_response,
     remedy_steps: response.remedy_steps,
     confidence: hasMarketData ? 0.68 : 0.45,
-    market_signal: intent === "market" || intent === "finance" ? trend.signal : "wait",
+    market_signal: (intent === "market" || intent === "finance") ? marketSignal : "wait",
     weather_alert: weatherAlert,
-    source_notes: [`Intent: ${intent}`, cropResolution.source === "query" ? "Crop detected from question" : "Crop from selector", "Local fallback knowledge"],
+    source_notes: [
+      `Intent: ${intent}`,
+      cropResolution.source === "query" ? "Crop detected from question" : "Crop from selector",
+      marketSummary && hasMarketData ? `Market: ${marketSummary.source}` : "Market: seeded fallback knowledge"
+    ],
     safety_note: safetyNote(language)
   };
 }
@@ -381,8 +406,13 @@ module.exports = async function handler(req, res) {
   const intent = detectIntent(payload.query);
   const cropResolution = resolveCropForQuery(payload, knowledge);
   const cropMarket = cropResolution.cropMarket;
-  const priceInfo = getLatestPrice(cropMarket, district.id);
-  const trend = calcTrend(priceInfo);
+
+  // Live AgMarknet (data.gov.in) market data for the crop the question is about
+  // (resolved from the query, else the selector) — the SAME pipeline Module 1 uses,
+  // so the advisor's sell/hold analysis is grounded in real mandi prices.
+  const marketSummary = cropResolution.hasMarketData
+    ? await resolveMarketSummary(knowledge, payload.districtId, cropResolution.requestedCropId, payload.language || "hinglish")
+    : null;
 
   // Lightweight RAG: pull only the KB chunks most relevant to this query
   // (BM25 + bilingual synonyms) instead of injecting the whole knowledge base.
@@ -399,14 +429,21 @@ module.exports = async function handler(req, res) {
       hasMarketData: cropResolution.hasMarketData,
       source: cropResolution.source
     },
-    district,
+    district: { id: district.id, name: district.name, state: district.state },
     cropMarket: { id: cropMarket.id, name: cropMarket.name, unit: cropMarket.unit, storageRisk: cropMarket.storageRisk },
-    priceInfo: { latest: priceInfo.latest, previous: priceInfo.previous, first: priceInfo.first },
-    trend,
-    weatherSummary: payload.weatherSummary || null,
-    marketSummary: payload.marketSummary
-      ? { latestPrice: payload.marketSummary.latestPrice, trend: payload.marketSummary.trend, signal: payload.marketSummary.signal }
+    market: marketSummary
+      ? {
+          source: marketSummary.source,
+          live: marketSummary.live,
+          mandi: marketSummary.mandi,
+          latestPrice: marketSummary.latestPrice,
+          unit: marketSummary.unit,
+          priceRange: marketSummary.priceRange || null,
+          trend: marketSummary.trend,
+          signal: marketSummary.signal
+        }
       : null,
+    weatherSummary: payload.weatherSummary || null,
     zbnf: retrievedZbnf.map((item) => item.raw),
     cropCalendar: knowledge.calendar.filter((item) => item.cropId === cropMarket.id || item.cropId === "general").slice(0, 2),
     diseaseHints: retrievedDiseases.map((item) => item.raw)
@@ -464,7 +501,7 @@ Return valid JSON ONLY — no markdown, no extra text. Required fields: voice_re
       modelBacked: false,
       warning: error.message,
       retrieval,
-      result: fallbackAdvisor(payload, knowledge)
+      result: fallbackAdvisor(payload, knowledge, marketSummary)
     });
   }
 };
