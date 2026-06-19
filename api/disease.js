@@ -122,6 +122,30 @@ module.exports = async function handler(req, res) {
     if (approxBytes > 5 * 1024 * 1024) return sendJson(res, 400, { error: "Image exceeds 5 MB limit" });
   }
 
+  // Bulletproof: with neither a photo nor symptom text there is nothing to analyse.
+  if (!payload.image?.data && !String(payload.description || "").trim()) {
+    const lang = payload.language || "hinglish";
+    const ask = {
+      en: "Please upload a clear crop/leaf photo or describe the symptoms so I can help.",
+      hi: "कृपया फसल/पत्ती की साफ फोटो डालें या लक्षण बताएं ताकि मैं मदद कर सकूँ।",
+      hinglish: "Kripya crop/leaf ki clear photo daalein ya symptoms likhein taaki main madad kar saku."
+    };
+    return sendJson(res, 200, {
+      source: "input required",
+      modelBacked: false,
+      result: {
+        possible_issue: (NEUTRAL_BACKFILL[lang] || NEUTRAL_BACKFILL.hinglish).issue,
+        confidence: 0,
+        visual_signs: [(NEUTRAL_BACKFILL[lang] || NEUTRAL_BACKFILL.hinglish).sign],
+        organic_treatment: [(NEUTRAL_BACKFILL[lang] || NEUTRAL_BACKFILL.hinglish).treat],
+        prevention: [],
+        escalation: ESCALATION_COPY[lang] || ESCALATION_COPY.hinglish,
+        voice_response: ask[lang] || ask.hinglish,
+        safety_note: safetyNote(lang)
+      }
+    });
+  }
+
   let knowledge;
   try {
     knowledge = loadKnowledge();

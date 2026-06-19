@@ -114,13 +114,36 @@ function marketDecision(trend, storageRisk, language) {
   return "Local price aur storage risk clear hone tak wait karein ya sirf small portion bechein.";
 }
 
-function fallbackAdvisor(payload, knowledge, marketSummary) {
+function fallbackAdvisor(payload, knowledge, marketSummary, marketComparison) {
   const district = findDistrict(knowledge, payload.districtId);
   const cropResolution = resolveCropForQuery(payload, knowledge);
   const cropMarket = cropResolution.cropMarket;
   const language = payload.language || "hinglish";
   const intent = detectIntent(payload.query);
   const hasMarketData = cropResolution.hasMarketData;
+
+  // Broad "which crops to sell?" — compare the fetched crops (no LLM).
+  if (marketComparison && marketComparison.length) {
+    const ranked = [...marketComparison].sort((a, b) => (a.signal === "sell" ? -1 : 1) - (b.signal === "sell" ? -1 : 1));
+    const sells = ranked.filter((c) => c.signal === "sell");
+    const list = ranked.map((c) => `${c.crop} ₹${c.price}/${c.unit} (${c.position || "—"})`).join("; ");
+    const lead = sells.length
+      ? `Best to sell now: ${sells.map((c) => c.crop).join(", ")}. Prices today — ${list}.`
+      : `No crop is clearly above its area average right now, so holding is reasonable. Prices today — ${list}.`;
+    return {
+      voice_response: lead,
+      remedy_steps: [
+        sells.length ? `Prioritise selling ${sells[0].crop} while it is above the area average.` : "Hold and recheck rates in a day or two.",
+        "Confirm today's rate at your local mandi or eNAM before moving produce.",
+        "For perishable crops, do not hold long without safe storage."
+      ],
+      confidence: 0.6,
+      market_signal: sells.length ? "sell" : "wait",
+      weather_alert: localizedWeatherAlert(payload.weatherSummary, language),
+      source_notes: ["Intent: multi-crop market", `Compared ${marketComparison.length} crops`, marketComparison[0].live ? "Live AgMarknet" : "Seeded fallback"],
+      safety_note: safetyNote(language)
+    };
+  }
 
   // Prefer the live AgMarknet summary; fall back to the seeded KB price series.
   let latestModal;
@@ -394,9 +417,27 @@ module.exports = async function handler(req, res) {
   // Live AgMarknet (data.gov.in) market data for the crop the question is about
   // (resolved from the query, else the selector) — the SAME pipeline Module 1 uses,
   // so the advisor's sell/hold analysis is grounded in real mandi prices.
+  const lang = payload.language || "hinglish";
   const marketSummary = cropResolution.hasMarketData
-    ? await resolveMarketSummary(knowledge, payload.districtId, cropResolution.requestedCropId, payload.language || "hinglish")
+    ? await resolveMarketSummary(knowledge, payload.districtId, cropResolution.requestedCropId, lang)
     : null;
+
+  // Broad "what/which crops should I sell?" questions name no specific crop —
+  // compare several crops instead of defaulting to one. Detected when no crop was
+  // matched from the query AND it asks generally about crops + selling/market.
+  const q = payload.query.toLowerCase();
+  const wantsMultiCrop = cropResolution.source !== "query"
+    && /(crops|which crop|what crop|best crop|kaun|kaunsi|konsi|कौन|कौनसी|फसल|fasal)/.test(q)
+    && /(sell|sale|bech|बेच|market|mandi|मंडी|price|bhav|भाव|profit|मुनाफा)/.test(q);
+  let marketComparison = null;
+  if (wantsMultiCrop) {
+    const ids = [...new Set([payload.cropId, "onion", "potato", "tomato", "wheat", "mustard", "moong"])].filter(Boolean).slice(0, 7);
+    const summaries = await Promise.all(ids.map((id) => resolveMarketSummary(knowledge, payload.districtId, id, lang).catch(() => null)));
+    marketComparison = summaries
+      .filter(Boolean)
+      .map((s) => ({ crop: s.crop, price: s.latestPrice, unit: s.unit, position: s.trend?.label, signal: s.signal, live: s.live }));
+    if (!marketComparison.length) marketComparison = null;
+  }
 
   // Lightweight RAG: pull only the KB chunks most relevant to this query
   // (BM25 + bilingual synonyms) instead of injecting the whole knowledge base.
@@ -427,6 +468,7 @@ module.exports = async function handler(req, res) {
           signal: marketSummary.signal
         }
       : null,
+    marketComparison, // present only for broad "which crops to sell?" questions
     weatherSummary: payload.weatherSummary || null,
     zbnf: retrievedZbnf.map((item) => item.raw),
     cropCalendar: knowledge.calendar.filter((item) => item.cropId === cropMarket.id || item.cropId === "general").slice(0, 2),
@@ -445,6 +487,7 @@ Use ONLY the data in the context JSON — never invent prices or facts. Recommen
 
 WRITE A GENUINELY USEFUL ANSWER — not generic boilerplate. Speak directly TO the farmer ("you", "your crop").
 0) Re-read the farmer's exact question and make sure your answer addresses precisely THAT. If they ask "rising or falling?", answer the direction; if "should I sell?", give a clear sell/hold/wait with the reason; if "when/how", answer when/how. Do not drift to a generic template.
+0a) If context.marketComparison is present, the farmer asked WHICH crops to sell — do NOT answer about only one crop. Compare the listed crops using their prices and position vs area average, then clearly recommend which crop(s) look best to SELL now (price above average / "sell" signal) and which to HOLD, quoting each crop's price. Rank them.
 1) First, directly answer the farmer's exact question in one clear sentence.
 2) If context.market exists, you MUST quote the REAL figures: the price (use context.market.latestPrice with context.market.unit, e.g. "₹1568/quintal"), the range across nearby mandis (context.market.priceRange.min–max), and where today's price sits (context.market.trend.label). Give the actual numbers — never say only "check the price".
 3) IMPORTANT: context.market is a SAME-DAY snapshot across mandis (a spatial comparison), NOT a day-over-day time trend. If the farmer asks whether prices are "rising or falling" over time, state today's price and its position vs nearby mandis, and say that for the day-to-day trend they should check the last few days' local/eNAM rates — do not claim a time trend you don't have.
@@ -496,7 +539,7 @@ Return valid JSON ONLY — no markdown, no extra text. Required fields: voice_re
       modelBacked: false,
       warning: error.message,
       retrieval,
-      result: fallbackAdvisor(payload, knowledge, marketSummary)
+      result: fallbackAdvisor(payload, knowledge, marketSummary, marketComparison)
     });
   }
 };
