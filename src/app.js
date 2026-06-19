@@ -515,7 +515,10 @@ function bindEvents() {
     const shouldResetQuery = shouldReplaceQuery();
     state.language = dom.language.value;
     applyLanguage({ resetQuery: shouldResetQuery });
-    refreshSignals();
+    refreshSignals(); // weather + market re-localize (server returns localized text)
+    // Re-run the disease triage in the new language so the whole result is
+    // consistent (not just the labels) when the farmer toggles languages.
+    if (state.diseaseResult && (state.image || dom.symptomInput.value.trim())) analyzeDisease();
   });
   dom.districtSelect.addEventListener("change", () => {
     state.districtId = dom.districtSelect.value;

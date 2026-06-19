@@ -97,6 +97,8 @@ module.exports = async function handler(req, res) {
   const prompt = `
 You are Farming Consultant Disease Triage.
 ${langInstruction}
+IMPORTANT: EVERY string in your JSON — possible_issue, visual_signs, organic_treatment, prevention, escalation, voice_response, safety_note — MUST be written in that one language. Do not mix languages. The knowledge below is reference only; translate it into the required language in your answer.
+You MUST include all fields and fill every array (visual_signs, organic_treatment, prevention, escalation) with 2-4 items each — do not leave any field empty.
 Triage crop disease/pest risk from image and/or symptoms.
 This is not final diagnosis. Recommend organic remedies only.
 Never recommend synthetic chemical pesticides, unsafe mixtures, antibiotics, or exact toxic concentrations.
@@ -105,8 +107,8 @@ Language: ${payload.language || "hinglish"}
 Crop: ${payload.crop || "unknown"}
 District: ${payload.district || "unknown"}
 Symptoms: ${payload.description || "No text symptoms"}
-Relevant organic disease knowledge (RAG-retrieved): ${JSON.stringify(retrievedDiseases.map((item) => item.raw))}
-Relevant ZBNF practices (RAG-retrieved): ${JSON.stringify(retrievedZbnf.map((item) => item.raw))}
+Relevant organic disease knowledge (RAG-retrieved, reference only): ${JSON.stringify(retrievedDiseases.map((item) => item.raw))}
+Relevant ZBNF practices (RAG-retrieved, reference only): ${JSON.stringify(retrievedZbnf.map((item) => item.raw))}
 Return strict JSON matching schema.`;
 
   const parts = [];
