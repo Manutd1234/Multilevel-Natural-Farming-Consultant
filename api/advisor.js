@@ -443,7 +443,8 @@ module.exports = async function handler(req, res) {
 ${langInstruction}
 Use ONLY the data in the context JSON — never invent prices or facts. Recommend organic / zero-chemical practices only.
 
-WRITE A GENUINELY USEFUL ANSWER — not generic boilerplate:
+WRITE A GENUINELY USEFUL ANSWER — not generic boilerplate. Speak directly TO the farmer ("you", "your crop").
+0) Re-read the farmer's exact question and make sure your answer addresses precisely THAT. If they ask "rising or falling?", answer the direction; if "should I sell?", give a clear sell/hold/wait with the reason; if "when/how", answer when/how. Do not drift to a generic template.
 1) First, directly answer the farmer's exact question in one clear sentence.
 2) If context.market exists, you MUST quote the REAL figures: the price (use context.market.latestPrice with context.market.unit, e.g. "₹1568/quintal"), the range across nearby mandis (context.market.priceRange.min–max), and where today's price sits (context.market.trend.label). Give the actual numbers — never say only "check the price".
 3) IMPORTANT: context.market is a SAME-DAY snapshot across mandis (a spatial comparison), NOT a day-over-day time trend. If the farmer asks whether prices are "rising or falling" over time, state today's price and its position vs nearby mandis, and say that for the day-to-day trend they should check the last few days' local/eNAM rates — do not claim a time trend you don't have.
@@ -451,7 +452,7 @@ WRITE A GENUINELY USEFUL ANSWER — not generic boilerplate:
 5) For weather/spray/sowing questions, use context.weatherSummary (rain %, spray window) with the actual numbers.
 
 Field rules:
-- voice_response: 2-4 short, farmer-friendly sentences that DIRECTLY answer the question and INCLUDE the actual price figure when market data exists.
+- voice_response: 3-5 sentences written TO the farmer ("you/your") that DIRECTLY and fully answer their exact question, INCLUDE the actual price figure when market data exists, and briefly explain the reasoning so they understand why.
 - remedy_steps: 2-4 SPECIFIC steps tailored to THIS crop, price and situation (e.g. a concrete storage/selling threshold). Avoid filler like a bare "consult your agriculture officer" unless it truly adds value.
 - market_signal: exactly "sell", "hold", or "wait" — match context.market.signal when market data exists; else "wait".
 - confidence: 0..1 — higher (≈0.85) when context.market.live is true and the signal is clear; lower (≈0.5) when data is seeded/unavailable or the question is vague.
