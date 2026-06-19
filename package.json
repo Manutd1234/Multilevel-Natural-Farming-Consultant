@@ -11,6 +11,7 @@
     "validate": "python3 tests/validate_project.py",
     "test:api": "node tests/api_tests.js",
     "test:crops": "node tests/crop_resolution_test.js",
+    "test:pipeline": "node tests/disease_pipeline_test.js",
     "test:images": "node tests/image_uniqueness_test.js"
   }
 }

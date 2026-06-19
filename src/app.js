@@ -283,6 +283,8 @@ const COPY = {
     openMeteoUnavailable: "Open-Meteo signal abhi unavailable hai.",
     marketUnavailable: "Fallback market signal abhi unavailable hai.",
     estValue: "Anumaanit gross value",
+    diagnosisConfidence: "Diagnosis confidence",
+    confNote: "AI is identification ko lekar kitna sure hai (crop quality nahi)",
     marketSignal: "Market signal",
     confidence: "Confidence",
     weatherAlert: "Weather alert",
@@ -360,6 +362,8 @@ const COPY = {
     openMeteoUnavailable: "Open-Meteo signal अभी उपलब्ध नहीं है।",
     marketUnavailable: "Fallback market signal अभी उपलब्ध नहीं है।",
     estValue: "अनुमानित मूल्य",
+    diagnosisConfidence: "निदान विश्वास",
+    confNote: "AI इस पहचान को लेकर कितना निश्चित है (फसल की गुणवत्ता नहीं)",
     marketSignal: "मंडी संकेत",
     confidence: "विश्वास",
     weatherAlert: "मौसम चेतावनी",
@@ -437,6 +441,8 @@ const COPY = {
     openMeteoUnavailable: "Open-Meteo signal unavailable.",
     marketUnavailable: "Fallback market signal unavailable.",
     estValue: "Est. gross value",
+    diagnosisConfidence: "Diagnosis confidence",
+    confNote: "how sure the AI is about this identification (not crop quality)",
     marketSignal: "Market signal",
     confidence: "Confidence",
     weatherAlert: "Weather alert",
@@ -926,7 +932,7 @@ function renderDiseaseResult(result, source) {
   dom.diseaseSafetyLine.textContent = result.safety_note || t("defaultSafety");
   dom.diseaseResultGrid.innerHTML = `
     <article><strong>${escapeHtml(t("possibleIssue"))}</strong><span>${escapeHtml(result.possible_issue || "")}</span></article>
-    <article><strong>${escapeHtml(t("confidence"))}</strong><span class="${confidenceClass(result.confidence || 0)}">${Math.round((result.confidence || 0) * 100)}%</span></article>
+    <article><strong>${escapeHtml(t("diagnosisConfidence"))}</strong><span class="${confidenceClass(result.confidence || 0)}">${Math.round((result.confidence || 0) * 100)}%</span><small class="conf-note">${escapeHtml(t("confNote"))}</small></article>
     <article><strong>${escapeHtml(t("source"))}</strong><span>${escapeHtml(source)}</span></article>
     <article class="wide"><strong>${escapeHtml(t("visualSigns"))}</strong><ul>${listItems(result.visual_signs)}</ul></article>
     <article class="wide"><strong>${escapeHtml(t("organicTreatment"))}</strong><ul>${listItems(result.organic_treatment)}</ul></article>

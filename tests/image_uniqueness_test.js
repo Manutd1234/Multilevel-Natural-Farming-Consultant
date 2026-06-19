@@ -15,13 +15,17 @@
  */
 const handler = require("../api/disease.js");
 
+// name, url, expectDiseased? (true = clearly diseased; the diagnosis must not say "healthy")
 const IMAGES = [
-  ["wheat_leaf_rust",  "https://upload.wikimedia.org/wikipedia/commons/d/d4/Wheat_leaf_rust_on_wheat.jpg"],
-  ["potato_late_blight","https://upload.wikimedia.org/wikipedia/commons/a/aa/Late_blight_on_potato_leaf_2.jpg"],
-  ["healthy_rice_field","https://upload.wikimedia.org/wikipedia/commons/0/0a/20201102.Hengnan.Hybrid_rice_Sanyou-1.6.jpg"],
-  ["cotton_plant",     "https://upload.wikimedia.org/wikipedia/commons/6/68/CottonPlant.JPG"],
-  ["banana_varieties", "https://upload.wikimedia.org/wikipedia/commons/d/de/Bananavarieties.jpg"],
-  ["potato_tubers",    "https://upload.wikimedia.org/wikipedia/commons/a/ab/Patates.jpg"]
+  ["wheat_leaf_rust",   "https://upload.wikimedia.org/wikipedia/commons/d/d4/Wheat_leaf_rust_on_wheat.jpg", true],
+  ["potato_late_blight","https://upload.wikimedia.org/wikipedia/commons/a/aa/Late_blight_on_potato_leaf_2.jpg", true],
+  ["maize_corn_smut",   "https://upload.wikimedia.org/wikipedia/commons/f/fa/Ustilago_maydis_J1b.jpg", true],
+  ["aphid_infestation", "https://upload.wikimedia.org/wikipedia/commons/5/51/Aphids_September_2008-1.jpg", true],
+  ["healthy_rice_field","https://upload.wikimedia.org/wikipedia/commons/0/0a/20201102.Hengnan.Hybrid_rice_Sanyou-1.6.jpg", false],
+  ["cotton_plant",      "https://upload.wikimedia.org/wikipedia/commons/6/68/CottonPlant.JPG", false],
+  ["banana_varieties",  "https://upload.wikimedia.org/wikipedia/commons/d/de/Bananavarieties.jpg", false],
+  ["potato_tubers",     "https://upload.wikimedia.org/wikipedia/commons/a/ab/Patates.jpg", false],
+  ["tomato_fruit",      "https://upload.wikimedia.org/wikipedia/commons/8/89/Tomato_je.jpg", false]
 ];
 
 function mockRes() {
@@ -43,25 +47,41 @@ async function fetchBase64(url) {
     return;
   }
 
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const results = [];
-  for (const [name, url] of IMAGES) {
+  for (const [name, url, expectDiseased] of IMAGES) {
     try {
       const image = await fetchBase64(url);
+      // Skip oversized images (the API rejects >5 MB) — a test-data limitation, not a bug.
+      if (Math.ceil(image.data.length * 0.75) > 5 * 1024 * 1024) {
+        console.log(`\n[${name}] SKIPPED — image > 5 MB`);
+        results.push({ name, skipped: "oversized" });
+        continue;
+      }
       const res = mockRes();
       await handler({ method: "POST", body: { language: "en", crop: "onion", description: "", image } }, res);
       const out = JSON.parse(res._body);
       const r = out.result || {};
-      results.push({ name, modelBacked: out.modelBacked, issue: r.possible_issue, confidence: r.confidence, sign: (r.visual_signs || [])[0] });
-      console.log(`\n[${name}] modelBacked=${out.modelBacked} conf=${r.confidence}`);
-      console.log(`   issue: ${r.issue || r.possible_issue}`);
-      console.log(`   sign : ${(r.visual_signs || [])[0]}`);
+      if (!out.modelBacked) {
+        // LLM transiently unavailable/rate-limited → fell back to KB; skip (not a vision result).
+        console.log(`\n[${name}] SKIPPED — not model-backed (${out.warning || "fallback"})`);
+        results.push({ name, skipped: "fallback" });
+      } else {
+        results.push({ name, expectDiseased, issue: r.possible_issue, confidence: r.confidence, sign: (r.visual_signs || [])[0] });
+        console.log(`\n[${name}] conf=${r.confidence}`);
+        console.log(`   issue: ${r.possible_issue}`);
+        console.log(`   sign : ${(r.visual_signs || [])[0]}`);
+      }
     } catch (e) {
       console.log(`\n[${name}] FETCH/RUN ERROR: ${e.message}`);
-      results.push({ name, error: e.message });
+      results.push({ name, skipped: "error" });
     }
+    await sleep(1500); // space out calls to avoid rate limits
   }
 
-  const ok = results.filter((r) => !r.error);
+  const ok = results.filter((r) => !r.skipped);
+  const skipped = results.filter((r) => r.skipped);
+  if (skipped.length) console.log(`\nSkipped ${skipped.length}: ${skipped.map((s) => `${s.name}(${s.skipped})`).join(", ")}`);
   const issues = ok.map((r) => (r.issue || "").trim().toLowerCase());
   const signs = ok.map((r) => (r.sign || "").trim().toLowerCase());
   const distinctIssues = new Set(issues.filter(Boolean)).size;
@@ -72,11 +92,18 @@ async function fetchBase64(url) {
   console.log(`Distinct possible_issue: ${distinctIssues} | distinct first visual sign: ${distinctSigns}`);
 
   const failures = [];
-  if (ok.length < 3) failures.push("too few images analysed (network?)");
+  if (ok.length < 4) failures.push("too few images analysed (network?)");
   // The bug was: all identical. Require strong diversity.
   if (distinctIssues < Math.ceil(ok.length * 0.6)) failures.push(`possible_issue not diverse enough (${distinctIssues}/${ok.length})`);
   if (distinctSigns < Math.ceil(ok.length * 0.6)) failures.push(`visual signs not diverse enough (${distinctSigns}/${ok.length})`);
   if (ok.some((r) => !r.issue || !r.sign)) failures.push("an analysed image had an empty issue/sign");
+  // Confidence must always be a valid 0..1 number (the "82%" must be a real value).
+  if (ok.some((r) => typeof r.confidence !== "number" || r.confidence < 0 || r.confidence > 1)) failures.push("a confidence was not a valid 0..1 number");
+  // Clearly-diseased images must NOT be called healthy and should be reasonably confident.
+  for (const r of ok.filter((x) => x.expectDiseased)) {
+    if (/healthy|no clear disease|no disease/i.test(r.issue || "")) failures.push(`${r.name}: diseased image called healthy ("${r.issue}")`);
+    if (r.confidence < 0.4) failures.push(`${r.name}: diseased image confidence too low (${r.confidence})`);
+  }
 
   if (failures.length) {
     console.log("FAILED:");

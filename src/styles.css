@@ -410,6 +410,15 @@ button {
   font-weight: 600;
 }
 
+.conf-note {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
 .disease-tool {
   display: grid;
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);

@@ -82,6 +82,38 @@ function localDiseaseFallback(payload, knowledge, retrievedDiseases) {
   };
 }
 
+// Normalize whatever the model returns into the strict UI shape. The model can
+// omit/rename a field or return a string where an array is expected. We coerce
+// types and backfill ONLY with neutral, language-appropriate text — never a
+// specific KB disease (that caused identical, image-mismatched results). The
+// model's own image analysis is always the source of truth. Exported for tests.
+function normalizeDiseaseResult(raw, language = "hinglish") {
+  raw = raw && typeof raw === "object" ? raw : {};
+  const nb = NEUTRAL_BACKFILL[language] || NEUTRAL_BACKFILL.hinglish;
+
+  const result = {
+    possible_issue: String(raw.possible_issue || raw.disease || raw.issue || nb.issue).trim() || nb.issue,
+    confidence: coerceConfidence(raw.confidence, 0.5),
+    visual_signs: coerceList(raw.visual_signs, [nb.sign]),
+    organic_treatment: coerceList(raw.organic_treatment, [nb.treat]),
+    prevention: coerceList(raw.prevention, []),
+    escalation: coerceList(raw.escalation, ESCALATION_COPY[language] || ESCALATION_COPY.hinglish),
+    voice_response: String(raw.voice_response || "").trim(),
+    safety_note: String(raw.safety_note || safetyNote(language))
+  };
+
+  // Clamp confidence into [0,1] defensively.
+  if (!(result.confidence >= 0)) result.confidence = 0.5;
+  if (result.confidence > 1) result.confidence = 1;
+
+  // If the model gave structured fields but no spoken line, synthesize one.
+  if (!result.voice_response) {
+    const firstStep = result.organic_treatment[0] || "Follow organic steps and confirm with your local KVK.";
+    result.voice_response = `Possible issue: ${result.possible_issue} (confidence ${Math.round(result.confidence * 100)}%). ${firstStep}`;
+  }
+  return result;
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") return sendJson(res, 405, { error: "Use POST /api/disease" });
   const payload = await readBody(req);
@@ -128,7 +160,7 @@ Base possible_issue, visual_signs, organic_treatment, prevention and escalation 
 
 Rules:
 - possible_issue: a SHORT label, max ~8 words (e.g. "Wheat leaf rust", "Late blight", "Crop looks healthy").
-- confidence: ALWAYS a number between 0 and 1 reflecting how clearly the issue is visible (≈0.85 clear, ≈0.4 unclear, ≈0.15 blurry/mismatched image). NEVER omit confidence.
+- confidence: ALWAYS a number between 0 and 1 = how CERTAIN you are of your identification, NOT crop quality. A clearly diseased crop you can identify well = HIGH confidence (≈0.85). A clearly healthy crop = HIGH confidence. Use LOW confidence (≈0.3) only when the image is blurry, ambiguous, or you cannot tell. Never omit it.
 - visual_signs, organic_treatment, prevention, escalation: 2-4 specific items each, grounded in the image — never leave empty.
 - ORGANIC / zero-chemical remedies only. Never name synthetic chemical pesticides, unsafe mixtures, antibiotics, or exact toxic doses.
 - If confidence < 0.65, tell the farmer to verify with KVK / local agriculture officer.
@@ -153,32 +185,7 @@ Return strict JSON: { possible_issue, confidence, visual_signs[], organic_treatm
 
   try {
     const { result: raw, provider } = await callLLM({ parts, schema: DISEASE_SCHEMA, temperature: 0.15 });
-
-    // The model can omit/rename a field or return a string where an array is
-    // expected. Coerce to the UI shape; backfill ONLY with neutral, language-
-    // appropriate text — never a specific KB disease (that caused identical,
-    // image-mismatched results). The model's image analysis is the source of truth.
-    const language = payload.language || "hinglish";
-    const nb = NEUTRAL_BACKFILL[language] || NEUTRAL_BACKFILL.hinglish;
-
-    const result = {
-      possible_issue: String(raw.possible_issue || raw.disease || raw.issue || nb.issue),
-      confidence: coerceConfidence(raw.confidence, 0.5),
-      visual_signs: coerceList(raw.visual_signs, [nb.sign]),
-      organic_treatment: coerceList(raw.organic_treatment, [nb.treat]),
-      prevention: coerceList(raw.prevention, []),
-      escalation: coerceList(raw.escalation, ESCALATION_COPY[language] || ESCALATION_COPY.hinglish),
-      voice_response: String(raw.voice_response || "").trim(),
-      safety_note: String(raw.safety_note || safetyNote(language))
-    };
-
-    // If the model gave structured fields but no spoken line, synthesize one
-    // rather than discarding a usable analysis.
-    if (!result.voice_response) {
-      const firstStep = result.organic_treatment[0] || "Follow organic steps and confirm with your local KVK.";
-      result.voice_response = `Possible issue: ${result.possible_issue} (confidence ${Math.round(result.confidence * 100)}%). ${firstStep}`;
-    }
-
+    const result = normalizeDiseaseResult(raw, payload.language || "hinglish");
     return sendJson(res, 200, {
       source: `${provider} image/text triage + organic KB`,
       modelBacked: true,
@@ -195,3 +202,6 @@ Return strict JSON: { possible_issue, confidence, visual_signs[], organic_treatm
     });
   }
 };
+
+// Exported for tests (deterministic pipeline checks).
+module.exports.normalizeDiseaseResult = normalizeDiseaseResult;
