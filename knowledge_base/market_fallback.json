@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-06-15",
-  "note": "Seeded fallback dataset for demo. Replace with Agmarknet/data.gov.in ingestion in production.",
+  "lastUpdated": "2026-06-18",
+  "note": "Seeded fallback dataset (28 crops). Live prices come from data.gov.in AgMarknet; this is the graceful fallback. yieldPerAcre (quintal/acre) drives the area-based value estimate.",
   "crops": [
     {
       "id": "onion",
@@ -8,16 +8,42 @@
       "unit": "quintal",
       "storageRisk": "high",
       "markets": [
-        { "districtId": "hisar", "name": "Hisar", "history": [
-          { "date": "2026-06-08", "modal": 1720 },
-          { "date": "2026-06-09", "modal": 1760 },
-          { "date": "2026-06-10", "modal": 1810 },
-          { "date": "2026-06-11", "modal": 1800 },
-          { "date": "2026-06-12", "modal": 1850 },
-          { "date": "2026-06-13", "modal": 1880 },
-          { "date": "2026-06-14", "modal": 1910 }
-        ] }
-      ]
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-08",
+              "modal": 1720
+            },
+            {
+              "date": "2026-06-09",
+              "modal": 1760
+            },
+            {
+              "date": "2026-06-10",
+              "modal": 1810
+            },
+            {
+              "date": "2026-06-11",
+              "modal": 1800
+            },
+            {
+              "date": "2026-06-12",
+              "modal": 1850
+            },
+            {
+              "date": "2026-06-13",
+              "modal": 1880
+            },
+            {
+              "date": "2026-06-14",
+              "modal": 1910
+            }
+          ]
+        }
+      ],
+      "yieldPerAcre": 100
     },
     {
       "id": "bajra",
@@ -25,16 +51,42 @@
       "unit": "quintal",
       "storageRisk": "medium",
       "markets": [
-        { "districtId": "hisar", "name": "Hisar", "history": [
-          { "date": "2026-06-08", "modal": 2240 },
-          { "date": "2026-06-09", "modal": 2260 },
-          { "date": "2026-06-10", "modal": 2250 },
-          { "date": "2026-06-11", "modal": 2280 },
-          { "date": "2026-06-12", "modal": 2290 },
-          { "date": "2026-06-13", "modal": 2300 },
-          { "date": "2026-06-14", "modal": 2310 }
-        ] }
-      ]
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-08",
+              "modal": 2240
+            },
+            {
+              "date": "2026-06-09",
+              "modal": 2260
+            },
+            {
+              "date": "2026-06-10",
+              "modal": 2250
+            },
+            {
+              "date": "2026-06-11",
+              "modal": 2280
+            },
+            {
+              "date": "2026-06-12",
+              "modal": 2290
+            },
+            {
+              "date": "2026-06-13",
+              "modal": 2300
+            },
+            {
+              "date": "2026-06-14",
+              "modal": 2310
+            }
+          ]
+        }
+      ],
+      "yieldPerAcre": 12
     },
     {
       "id": "moong",
@@ -42,16 +94,42 @@
       "unit": "quintal",
       "storageRisk": "low",
       "markets": [
-        { "districtId": "hisar", "name": "Hisar", "history": [
-          { "date": "2026-06-08", "modal": 8400 },
-          { "date": "2026-06-09", "modal": 8350 },
-          { "date": "2026-06-10", "modal": 8280 },
-          { "date": "2026-06-11", "modal": 8220 },
-          { "date": "2026-06-12", "modal": 8180 },
-          { "date": "2026-06-13", "modal": 8100 },
-          { "date": "2026-06-14", "modal": 8050 }
-        ] }
-      ]
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-08",
+              "modal": 8400
+            },
+            {
+              "date": "2026-06-09",
+              "modal": 8350
+            },
+            {
+              "date": "2026-06-10",
+              "modal": 8280
+            },
+            {
+              "date": "2026-06-11",
+              "modal": 8220
+            },
+            {
+              "date": "2026-06-12",
+              "modal": 8180
+            },
+            {
+              "date": "2026-06-13",
+              "modal": 8100
+            },
+            {
+              "date": "2026-06-14",
+              "modal": 8050
+            }
+          ]
+        }
+      ],
+      "yieldPerAcre": 5
     },
     {
       "id": "mustard",
@@ -59,16 +137,42 @@
       "unit": "quintal",
       "storageRisk": "medium",
       "markets": [
-        { "districtId": "hisar", "name": "Hisar", "history": [
-          { "date": "2026-06-08", "modal": 5350 },
-          { "date": "2026-06-09", "modal": 5360 },
-          { "date": "2026-06-10", "modal": 5380 },
-          { "date": "2026-06-11", "modal": 5370 },
-          { "date": "2026-06-12", "modal": 5400 },
-          { "date": "2026-06-13", "modal": 5420 },
-          { "date": "2026-06-14", "modal": 5430 }
-        ] }
-      ]
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-08",
+              "modal": 5350
+            },
+            {
+              "date": "2026-06-09",
+              "modal": 5360
+            },
+            {
+              "date": "2026-06-10",
+              "modal": 5380
+            },
+            {
+              "date": "2026-06-11",
+              "modal": 5370
+            },
+            {
+              "date": "2026-06-12",
+              "modal": 5400
+            },
+            {
+              "date": "2026-06-13",
+              "modal": 5420
+            },
+            {
+              "date": "2026-06-14",
+              "modal": 5430
+            }
+          ]
+        }
+      ],
+      "yieldPerAcre": 8
     },
     {
       "id": "potato",
@@ -76,16 +180,42 @@
       "unit": "quintal",
       "storageRisk": "high",
       "markets": [
-        { "districtId": "hisar", "name": "Hisar", "history": [
-          { "date": "2026-06-09", "modal": 1300 },
-          { "date": "2026-06-10", "modal": 1280 },
-          { "date": "2026-06-11", "modal": 1250 },
-          { "date": "2026-06-12", "modal": 1230 },
-          { "date": "2026-06-13", "modal": 1210 },
-          { "date": "2026-06-14", "modal": 1190 },
-          { "date": "2026-06-15", "modal": 1170 }
-        ] }
-      ]
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-09",
+              "modal": 1300
+            },
+            {
+              "date": "2026-06-10",
+              "modal": 1280
+            },
+            {
+              "date": "2026-06-11",
+              "modal": 1250
+            },
+            {
+              "date": "2026-06-12",
+              "modal": 1230
+            },
+            {
+              "date": "2026-06-13",
+              "modal": 1210
+            },
+            {
+              "date": "2026-06-14",
+              "modal": 1190
+            },
+            {
+              "date": "2026-06-15",
+              "modal": 1170
+            }
+          ]
+        }
+      ],
+      "yieldPerAcre": 100
     },
     {
       "id": "wheat",
@@ -93,25 +223,76 @@
       "unit": "quintal",
       "storageRisk": "low",
       "markets": [
-        { "districtId": "hisar", "name": "Hisar", "history": [
-          { "date": "2026-06-09", "modal": 2120 },
-          { "date": "2026-06-10", "modal": 2130 },
-          { "date": "2026-06-11", "modal": 2140 },
-          { "date": "2026-06-12", "modal": 2145 },
-          { "date": "2026-06-13", "modal": 2155 },
-          { "date": "2026-06-14", "modal": 2165 },
-          { "date": "2026-06-15", "modal": 2180 }
-        ] },
-        { "districtId": "karnal", "name": "Karnal", "history": [
-          { "date": "2026-06-09", "modal": 2115 },
-          { "date": "2026-06-10", "modal": 2125 },
-          { "date": "2026-06-11", "modal": 2135 },
-          { "date": "2026-06-12", "modal": 2145 },
-          { "date": "2026-06-13", "modal": 2150 },
-          { "date": "2026-06-14", "modal": 2160 },
-          { "date": "2026-06-15", "modal": 2170 }
-        ] }
-      ]
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-09",
+              "modal": 2120
+            },
+            {
+              "date": "2026-06-10",
+              "modal": 2130
+            },
+            {
+              "date": "2026-06-11",
+              "modal": 2140
+            },
+            {
+              "date": "2026-06-12",
+              "modal": 2145
+            },
+            {
+              "date": "2026-06-13",
+              "modal": 2155
+            },
+            {
+              "date": "2026-06-14",
+              "modal": 2165
+            },
+            {
+              "date": "2026-06-15",
+              "modal": 2180
+            }
+          ]
+        },
+        {
+          "districtId": "karnal",
+          "name": "Karnal",
+          "history": [
+            {
+              "date": "2026-06-09",
+              "modal": 2115
+            },
+            {
+              "date": "2026-06-10",
+              "modal": 2125
+            },
+            {
+              "date": "2026-06-11",
+              "modal": 2135
+            },
+            {
+              "date": "2026-06-12",
+              "modal": 2145
+            },
+            {
+              "date": "2026-06-13",
+              "modal": 2150
+            },
+            {
+              "date": "2026-06-14",
+              "modal": 2160
+            },
+            {
+              "date": "2026-06-15",
+              "modal": 2170
+            }
+          ]
+        }
+      ],
+      "yieldPerAcre": 20
     },
     {
       "id": "tomato",
@@ -119,15 +300,608 @@
       "unit": "quintal",
       "storageRisk": "high",
       "markets": [
-        { "districtId": "hisar", "name": "Hisar", "history": [
-          { "date": "2026-06-09", "modal": 1200 },
-          { "date": "2026-06-10", "modal": 1150 },
-          { "date": "2026-06-11", "modal": 1080 },
-          { "date": "2026-06-12", "modal": 1050 },
-          { "date": "2026-06-13", "modal": 1010 },
-          { "date": "2026-06-14", "modal": 990 },
-          { "date": "2026-06-15", "modal": 980 }
-        ] }
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-09",
+              "modal": 1200
+            },
+            {
+              "date": "2026-06-10",
+              "modal": 1150
+            },
+            {
+              "date": "2026-06-11",
+              "modal": 1080
+            },
+            {
+              "date": "2026-06-12",
+              "modal": 1050
+            },
+            {
+              "date": "2026-06-13",
+              "modal": 1010
+            },
+            {
+              "date": "2026-06-14",
+              "modal": 990
+            },
+            {
+              "date": "2026-06-15",
+              "modal": 980
+            }
+          ]
+        }
+      ],
+      "yieldPerAcre": 120
+    },
+    {
+      "id": "paddy",
+      "name": "Paddy / Dhan",
+      "unit": "quintal",
+      "storageRisk": "low",
+      "yieldPerAcre": 25,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 2058
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 2079
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 2100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "maize",
+      "name": "Maize / Makka",
+      "unit": "quintal",
+      "storageRisk": "low",
+      "yieldPerAcre": 25,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 1960
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 1980
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 2000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gram",
+      "name": "Gram / Chana",
+      "unit": "quintal",
+      "storageRisk": "low",
+      "yieldPerAcre": 8,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 5684
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 5742
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 5800
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "arhar",
+      "name": "Arhar / Tur Dal",
+      "unit": "quintal",
+      "storageRisk": "low",
+      "yieldPerAcre": 6,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 9310
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 9405
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 9500
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "soybean",
+      "name": "Soybean / Soya",
+      "unit": "quintal",
+      "storageRisk": "low",
+      "yieldPerAcre": 10,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 4410
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 4455
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 4500
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "groundnut",
+      "name": "Groundnut / Moongphali",
+      "unit": "quintal",
+      "storageRisk": "medium",
+      "yieldPerAcre": 10,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 6076
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 6138
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 6200
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jowar",
+      "name": "Jowar / Sorghum",
+      "unit": "quintal",
+      "storageRisk": "low",
+      "yieldPerAcre": 12,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 2744
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 2772
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 2800
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "barley",
+      "name": "Barley / Jau",
+      "unit": "quintal",
+      "storageRisk": "low",
+      "yieldPerAcre": 18,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 1862
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 1881
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 1900
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cotton",
+      "name": "Cotton / Kapas",
+      "unit": "quintal",
+      "storageRisk": "low",
+      "yieldPerAcre": 8,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 7056
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 7128
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 7200
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sugarcane",
+      "name": "Sugarcane / Ganna",
+      "unit": "quintal",
+      "storageRisk": "medium",
+      "yieldPerAcre": 350,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 353
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 356
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 360
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guar",
+      "name": "Guar / Cluster Bean",
+      "unit": "quintal",
+      "storageRisk": "low",
+      "yieldPerAcre": 6,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 5096
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 5148
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 5200
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sunflower",
+      "name": "Sunflower / Surajmukhi",
+      "unit": "quintal",
+      "storageRisk": "medium",
+      "yieldPerAcre": 6,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 5880
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 5940
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 6000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "garlic",
+      "name": "Garlic / Lehsun",
+      "unit": "quintal",
+      "storageRisk": "medium",
+      "yieldPerAcre": 50,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 7840
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 7920
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 8000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ginger",
+      "name": "Ginger / Adrak",
+      "unit": "quintal",
+      "storageRisk": "medium",
+      "yieldPerAcre": 60,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 5880
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 5940
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 6000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "greenchilli",
+      "name": "Green Chilli / Hari Mirch",
+      "unit": "quintal",
+      "storageRisk": "high",
+      "yieldPerAcre": 40,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 3920
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 3960
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 4000
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cauliflower",
+      "name": "Cauliflower / Phool Gobi",
+      "unit": "quintal",
+      "storageRisk": "high",
+      "yieldPerAcre": 100,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 1470
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 1485
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 1500
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cabbage",
+      "name": "Cabbage / Patta Gobi",
+      "unit": "quintal",
+      "storageRisk": "high",
+      "yieldPerAcre": 120,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 1176
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 1188
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 1200
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "brinjal",
+      "name": "Brinjal / Baingan",
+      "unit": "quintal",
+      "storageRisk": "high",
+      "yieldPerAcre": 100,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 1764
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 1782
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 1800
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "okra",
+      "name": "Okra / Bhindi",
+      "unit": "quintal",
+      "storageRisk": "high",
+      "yieldPerAcre": 50,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 2450
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 2475
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 2500
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "peas",
+      "name": "Green Peas / Matar",
+      "unit": "quintal",
+      "storageRisk": "high",
+      "yieldPerAcre": 40,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 3430
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 3465
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 3500
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "banana",
+      "name": "Banana / Kela",
+      "unit": "quintal",
+      "storageRisk": "high",
+      "yieldPerAcre": 200,
+      "markets": [
+        {
+          "districtId": "hisar",
+          "name": "Hisar",
+          "history": [
+            {
+              "date": "2026-06-16",
+              "modal": 1764
+            },
+            {
+              "date": "2026-06-17",
+              "modal": 1782
+            },
+            {
+              "date": "2026-06-18",
+              "modal": 1800
+            }
+          ]
+        }
       ]
     }
   ]

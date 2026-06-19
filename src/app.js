@@ -236,7 +236,7 @@ const dom = {
 const COPY = {
   hinglish: {
     htmlLang: "hi",
-    brandTagline: "Gemini + Open-Meteo + bilingual voice farming consultant",
+    brandTagline: "ChatGPT + Open-Meteo + AgMarknet bilingual voice farming consultant",
     languageLabel: "Language",
     serviceStatus: "Vercel-ready prototype",
     heroTitle: "Bolkar pucho. Photo bhejo. Safe organic salah lo.",
@@ -282,6 +282,7 @@ const COPY = {
     mandi: "Mandi",
     openMeteoUnavailable: "Open-Meteo signal abhi unavailable hai.",
     marketUnavailable: "Fallback market signal abhi unavailable hai.",
+    estValue: "Anumaanit gross value",
     marketSignal: "Market signal",
     confidence: "Confidence",
     weatherAlert: "Weather alert",
@@ -312,7 +313,7 @@ const COPY = {
   },
   hi: {
     htmlLang: "hi",
-    brandTagline: "Gemini + Open-Meteo के साथ voice-first प्राकृतिक खेती सलाह",
+    brandTagline: "ChatGPT + Open-Meteo + AgMarknet के साथ voice-first प्राकृतिक खेती सलाह",
     languageLabel: "भाषा",
     serviceStatus: "Vercel-ready prototype",
     heroTitle: "बोलकर पूछें। फोटो भेजें। सुरक्षित जैविक सलाह लें।",
@@ -358,6 +359,7 @@ const COPY = {
     mandi: "मंडी",
     openMeteoUnavailable: "Open-Meteo signal अभी उपलब्ध नहीं है।",
     marketUnavailable: "Fallback market signal अभी उपलब्ध नहीं है।",
+    estValue: "अनुमानित मूल्य",
     marketSignal: "मंडी संकेत",
     confidence: "विश्वास",
     weatherAlert: "मौसम चेतावनी",
@@ -388,7 +390,7 @@ const COPY = {
   },
   en: {
     htmlLang: "en",
-    brandTagline: "Voice-first natural farming consultant — Gemini + Open-Meteo",
+    brandTagline: "Voice-first natural farming consultant — ChatGPT + Open-Meteo + AgMarknet",
     languageLabel: "Language",
     serviceStatus: "Vercel-ready prototype",
     heroTitle: "Ask by voice. Send a crop photo. Get safe organic advice.",
@@ -434,6 +436,7 @@ const COPY = {
     mandi: "Mandi",
     openMeteoUnavailable: "Open-Meteo signal unavailable.",
     marketUnavailable: "Fallback market signal unavailable.",
+    estValue: "Est. gross value",
     marketSignal: "Market signal",
     confidence: "Confidence",
     weatherAlert: "Weather alert",
@@ -522,10 +525,15 @@ function bindEvents() {
     state.cropId = dom.cropSelect.value;
     refreshSignals();
   });
-  dom.unitSelect.addEventListener("change", () => state.unit = dom.unitSelect.value);
+  dom.unitSelect.addEventListener("change", () => {
+    state.unit = dom.unitSelect.value;
+    if (state.lastSignals) renderSignals(state.lastSignals.weather, state.lastSignals.market);
+  });
   dom.areaInput.addEventListener("input", () => {
     state.area = Number(dom.areaInput.value) || 1;
     if (dom.areaValue) dom.areaValue.textContent = state.area;
+    // Area changes the estimated value (not the price) — re-render from cache, no refetch.
+    if (state.lastSignals) renderSignals(state.lastSignals.weather, state.lastSignals.market);
   });
   dom.moduleTabs.forEach((button) => {
     button.addEventListener("click", () => switchTab(button.dataset.tab));
@@ -659,6 +667,18 @@ function renderSignals(weather, market) {
   const marketSummary = market.summary || {};
   const weatherSource = weather.live === false ? `${weather.source || t("openMeteoUnavailable")}: ${weather.warning || t("openMeteoUnavailable")}` : weather.source || "Open-Meteo";
   const marketSource = market.live === false ? `${market.source || t("marketUnavailable")}: ${market.warning || marketSummary.warning || t("marketUnavailable")}` : market.source || marketSummary.source || "Market API";
+
+  // Area-based estimate: price (₹/quintal) × yield (quintal/acre) × area (in acres).
+  // 1 bigha ≈ 0.25 acre (Haryana). Re-rendered live when the area slider moves.
+  const crop = selectedCrop();
+  const yieldPerAcre = Number(crop?.yieldPerAcre) || 0;
+  const acres = state.unit === "bigha" ? state.area * 0.25 : state.area;
+  const price = Number(marketSummary.latestPrice) || 0;
+  const estValue = (yieldPerAcre && price) ? Math.round(price * yieldPerAcre * acres) : null;
+  const estLine = estValue
+    ? `<p class="est-value"><strong>${escapeHtml(t("estValue"))}:</strong> ₹${estValue.toLocaleString("en-IN")} <small>(${state.area} ${escapeHtml(state.unit)} × ~${yieldPerAcre} ${escapeHtml(crop.unit)}/acre)</small></p>`
+    : "";
+
   dom.signalGrid.innerHTML = `
     <section class="signal-card">
       <h3>${escapeHtml(t("weather"))}</h3>
@@ -670,6 +690,7 @@ function renderSignals(weather, market) {
       <h3>${escapeHtml(t("mandi"))}</h3>
       <p class="metric">₹${marketSummary.latestPrice ?? "--"}</p>
       <p>${escapeHtml(marketSummary.voiceResponse || market.error || t("marketUnavailable"))}</p>
+      ${estLine}
       <span>${escapeHtml(marketSource)}</span>
       <canvas class="sparkline" width="260" height="58" data-history="${escapeHtml(JSON.stringify(marketSummary.history || []))}"></canvas>
     </section>

@@ -183,7 +183,7 @@ A full set of component, data-flow, and sequence diagrams lives in **[docs/archi
 | --- | --- | --- |
 | **Hosting / runtime** | Vercel Serverless Functions (Node.js ≥18) | Free tier, instant Git-based deploys, no servers to manage, secrets stay server-side, native `fetch`. Perfect for a static frontend + a handful of API routes. |
 | **Frontend** | Vanilla HTML/CSS/JS (ES modules) | No build step, tiny payload, fast on low-end phones, zero framework lock-in, trivial to host as static files. The app is small enough that a framework would add cost without benefit. |
-| **Primary LLM** | OpenAI **ChatGPT** (`gpt-4o-mini` default, `gpt-4o` fallback) | Reliable, paid credits avoid free-tier rate limits, strong multilingual + vision, JSON mode. |
+| **Primary LLM** | OpenAI **ChatGPT** (`gpt-5.4` default, `gpt-4o` fallback) | Reliable, paid credits avoid free-tier rate limits, strong multilingual + vision, JSON mode. |
 | **Fallback LLM** | Google **Gemini** (`gemini-2.5-flash` family) | Free tier for zero-cost demos; automatic failover if OpenAI errors. |
 | **Weather** | **Open-Meteo** Forecast API | Free, **no API key**, global, returns current+hourly+daily. Ideal for a zero-config demo. |
 | **Market prices** | **data.gov.in AgMarknet** ("Current Daily Price of Various Commodities from Various Markets (Mandi)") | The authoritative Government of India mandi feed. Real, live, free. |
@@ -283,7 +283,7 @@ callLLM({ parts, schema, temperature })
         └─ neither / both error  ──► throw ──► caller uses its local KB fallback
 ```
 
-- **OpenAI path:** Chat Completions, `response_format: json_object`, model order `gpt-4o-mini → gpt-4o`. Gemini-style `parts` (text + `inline_data` image) are transparently converted to OpenAI `content` blocks, so the disease handler is provider-agnostic.
+- **OpenAI path:** Chat Completions, `response_format: json_object`, model order `gpt-5.4 → gpt-4o`. Gemini-style `parts` (text + `inline_data` image) are transparently converted to OpenAI `content` blocks, so the disease handler is provider-agnostic.
 - **Gemini path:** `generateContent` with `responseSchema` structured output, model order `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash → gemini-flash-latest`. (We learned the hard way that `gemini-2.0-flash` returns *zero* free-tier quota on many keys — hence 2.5 leads.)
 - **Robust parsing:** model output is run through `safeParseJson` (handles fenced/wrapped JSON), then `coerceList` (string → array) and `coerceConfidence` ("High" → 0.85) so different providers' quirks never reach the UI.
 
@@ -412,7 +412,7 @@ All are **optional** — the app runs in fallback mode with none set. Copy `.env
 ```bash
 # ---- LLM (advisor + disease). Set EITHER OpenAI (recommended) OR Gemini ----
 OPENAI_API_KEY=sk-...           # OpenAI/ChatGPT key — primary, reliable
-# OPENAI_MODEL=gpt-4o-mini      # default model (gpt-4o also supported)
+# OPENAI_MODEL=gpt-5.4          # default model (gpt-4o is the fallback)
 # CHATGPT_MODEL is also accepted as the model-name variable
 
 GEMINI_API_KEY=...              # Google AI Studio key — automatic fallback

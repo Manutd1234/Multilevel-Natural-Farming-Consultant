@@ -326,7 +326,7 @@ Returns the first of `OPENAI_API_KEY`, `CHATGPT_API_KEY`, `OPENAI_KEY`; **or**, 
 - Auth: `Authorization: Bearer <key>`.
 - Body: `{ model, messages:[{role:"user", content}], temperature, response_format:{type:"json_object"} }`.
 - `content` is built by `partsToOpenAIContent(parts)`: `{text}` → `{type:"text"}`, `{inline_data:{mime_type,data}}` → `{type:"image_url", image_url:{url:"data:<mime>;base64,…"}}`.
-- Model order: `OPENAI_MODEL`/`CHATGPT_MODEL` (if a real model name, not an `sk-` key) → `gpt-4o-mini` → `gpt-4o`.
+- Model order: `OPENAI_MODEL`/`CHATGPT_MODEL` (if a real model name, not an `sk-` key) → `gpt-5.4` → `gpt-4o`.
 - Timeout: 20s per call. Output parsed via `safeParseJson`.
 
 ### 7.4 Gemini path — `callGemini`
@@ -533,7 +533,7 @@ Net effect: with **zero** configuration and **any** subset of services down, the
 | Variable | Used by | Default / note |
 | --- | --- | --- |
 | `OPENAI_API_KEY` (`CHATGPT_API_KEY`, `OPENAI_KEY`) | `callOpenAI` | Primary LLM. Also tolerated as an `sk-` value in `CHATGPT_MODEL`. |
-| `OPENAI_MODEL` / `CHATGPT_MODEL` | `callOpenAI` | Model name; default `gpt-4o-mini` → `gpt-4o`. |
+| `OPENAI_MODEL` / `CHATGPT_MODEL` | `callOpenAI` | Model name; default `gpt-5.4` → `gpt-4o`. |
 | `GEMINI_API_KEY` | `callGemini` | Fallback LLM. |
 | `GEMINI_MODEL` | `callGemini` | Default `gemini-2.5-flash`. |
 | `DATA_GOV_API_KEY` | `lib/market.js` | Public sample key bundled; override for reliability. |

@@ -399,6 +399,17 @@ button {
   height: 58px;
 }
 
+.est-value {
+  margin: 0.4rem 0 0;
+  color: var(--leaf-deep);
+  font-size: 0.95rem;
+}
+
+.est-value small {
+  color: var(--muted);
+  font-weight: 600;
+}
+
 .disease-tool {
   display: grid;
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
