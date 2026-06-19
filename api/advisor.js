@@ -14,6 +14,7 @@ const {
 } = require("../lib/shared");
 const { retrieve } = require("../lib/rag");
 const { resolveMarketSummary } = require("../lib/market");
+const { cropAliasFromQuery } = require("../lib/crops");
 
 const ADVISOR_SCHEMA = {
   type: "object",
@@ -29,18 +30,6 @@ const ADVISOR_SCHEMA = {
   required: ["voice_response", "remedy_steps", "confidence", "market_signal", "safety_note"]
 };
 
-const CROP_ALIASES = [
-  { id: "onion", name: "Onion / Pyaaz", terms: ["onion", "onions", "pyaaz", "pyaz", "प्याज"] },
-  { id: "potato", name: "Potato / Aloo", terms: ["potato", "potatoes", "aloo", "आलू"] },
-  { id: "bajra", name: "Bajra / Pearl Millet", terms: ["bajra", "pearl millet", "millet", "बाजरा"] },
-  { id: "moong", name: "Moong / Green Gram", terms: ["moong", "mung", "green gram", "मूंग"] },
-  { id: "mustard", name: "Mustard / Sarson", terms: ["mustard", "sarson", "सरसों"] },
-  { id: "wheat", name: "Wheat / Gehun", terms: ["wheat", "gehun", "गेहूं", "गेहुँ"] },
-  { id: "rice", name: "Rice / Paddy", terms: ["rice", "paddy", "धान", "चावल"] },
-  { id: "tomato", name: "Tomato / Tamatar", terms: ["tomato", "tomatoes", "tamatar", "टमाटर"] },
-  { id: "cotton", name: "Cotton / Kapas", terms: ["cotton", "kapas", "कपास"] }
-];
-
 function normalizeText(value) {
   return String(value || "").toLowerCase();
 }
@@ -53,11 +42,6 @@ function detectIntent(query) {
   if (/(rotate|rotation|next crop|crop after|sow|sowing|seed|variety|plant|बुवाई|बीज|फसल चक्र)/.test(text)) return "rotation";
   if (/(sell|selling|price|mandi|market|rate|bhav|hold|बेचना|बेच|भाव|मंडी|रेट|कीमत)/.test(text)) return "market";
   return "general";
-}
-
-function cropAliasFromQuery(query) {
-  const text = normalizeText(query);
-  return CROP_ALIASES.find((crop) => crop.terms.some((term) => text.includes(term)));
 }
 
 function resolveCropForQuery(payload, knowledge) {

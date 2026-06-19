@@ -32,6 +32,7 @@ def test_required_files_exist() -> None:
         "lib/shared.js",
         "lib/market.js",
         "lib/rag.js",
+        "lib/crops.js",
         "knowledge_base/districts.json",
         "knowledge_base/market_fallback.json",
         "knowledge_base/diseases.jsonl",

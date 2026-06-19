@@ -34,6 +34,26 @@ const ESCALATION_COPY = {
   ]
 };
 
+// Neutral, language-appropriate text used ONLY if the model omits a field — never
+// a specific KB disease, so an image-mismatched result is never fabricated.
+const NEUTRAL_BACKFILL = {
+  en: {
+    issue: "Unclear from the image — please verify locally",
+    sign: "Could not read clear signs from the photo — add a close-up or describe the symptoms.",
+    treat: "Remove badly affected leaves, improve airflow, and use locally advised organic inputs."
+  },
+  hi: {
+    issue: "तस्वीर से स्पष्ट नहीं — कृपया स्थानीय स्तर पर पुष्टि करें",
+    sign: "फोटो से स्पष्ट लक्षण नहीं मिले — पास से फोटो लें या लक्षण लिखें।",
+    treat: "अधिक प्रभावित पत्तियाँ हटाएँ, हवादार रखें, और स्थानीय सलाह अनुसार जैविक इनपुट उपयोग करें।"
+  },
+  hinglish: {
+    issue: "Image se clear nahi — local level par confirm karein",
+    sign: "Photo se clear signs nahi mile — close-up photo lein ya symptoms likhein.",
+    treat: "Zyada prabhavit patte hatayein, airflow improve karein, aur local advice ke organic input use karein."
+  }
+};
+
 function localDiseaseFallback(payload, knowledge, retrievedDiseases) {
   // Prefer the top RAG-retrieved disease (BM25 over symptoms/treatment); fall
   // back to the legacy keyword match, then the first KB entry.
@@ -95,21 +115,30 @@ module.exports = async function handler(req, res) {
       : "Respond ONLY in Hinglish (Hindi written in Roman script, mixed with simple English).";
 
   const prompt = `
-You are Farming Consultant Disease Triage.
+You are Farming Consultant Disease Triage — an expert agronomist analysing a crop photo and/or symptom text.
 ${langInstruction}
-IMPORTANT: EVERY string in your JSON — possible_issue, visual_signs, organic_treatment, prevention, escalation, voice_response, safety_note — MUST be written in that one language. Do not mix languages. The knowledge below is reference only; translate it into the required language in your answer.
-You MUST include all fields and fill every array (visual_signs, organic_treatment, prevention, escalation) with 2-4 items each — do not leave any field empty.
-Triage crop disease/pest risk from image and/or symptoms.
-This is not final diagnosis. Recommend organic remedies only.
-Never recommend synthetic chemical pesticides, unsafe mixtures, antibiotics, or exact toxic concentrations.
-If confidence < 0.65, tell farmer to verify with KVK/local agriculture officer.
-Language: ${payload.language || "hinglish"}
-Crop: ${payload.crop || "unknown"}
+Write EVERY field of the JSON in that one language. Do not mix languages.
+
+Analyse the ACTUAL image and symptoms. From what you genuinely see, determine:
+- the crop (if the image clearly shows a crop different from the stated one, analyse the crop you actually see and say so in possible_issue),
+- whether the plant looks healthy or shows a specific disease / pest / nutrient deficiency / stress,
+- the specific visible problem and where it appears (leaf, stem, fruit, whole plant).
+
+Base possible_issue, visual_signs, organic_treatment, prevention and escalation strictly on THIS image/symptoms. Do NOT copy the reference knowledge below if it does not match what you see. If the plant looks healthy, set possible_issue to a clear "healthy / no clear disease" statement and give monitoring + good-practice tips.
+
+Rules:
+- possible_issue: a SHORT label, max ~8 words (e.g. "Wheat leaf rust", "Late blight", "Crop looks healthy").
+- confidence: ALWAYS a number between 0 and 1 reflecting how clearly the issue is visible (≈0.85 clear, ≈0.4 unclear, ≈0.15 blurry/mismatched image). NEVER omit confidence.
+- visual_signs, organic_treatment, prevention, escalation: 2-4 specific items each, grounded in the image — never leave empty.
+- ORGANIC / zero-chemical remedies only. Never name synthetic chemical pesticides, unsafe mixtures, antibiotics, or exact toxic doses.
+- If confidence < 0.65, tell the farmer to verify with KVK / local agriculture officer.
+
+Stated crop: ${payload.crop || "unknown"}
 District: ${payload.district || "unknown"}
-Symptoms: ${payload.description || "No text symptoms"}
-Relevant organic disease knowledge (RAG-retrieved, reference only): ${JSON.stringify(retrievedDiseases.map((item) => item.raw))}
-Relevant ZBNF practices (RAG-retrieved, reference only): ${JSON.stringify(retrievedZbnf.map((item) => item.raw))}
-Return strict JSON matching schema.`;
+Symptoms (text): ${payload.description || "none provided — rely on the image"}
+Reference organic knowledge (BACKGROUND ONLY — for treatment ideas, do NOT copy verbatim): ${JSON.stringify(retrievedDiseases.map((item) => ({ name: item.raw.name, symptoms: item.raw.symptoms, organicTreatment: item.raw.organicTreatment })))}
+ZBNF practices (background): ${JSON.stringify(retrievedZbnf.map((item) => item.raw.name))}
+Return strict JSON: { possible_issue, confidence, visual_signs[], organic_treatment[], prevention[], escalation[], voice_response, safety_note }.`;
 
   const parts = [];
   if (payload.image?.data && payload.image?.mimeType) {
@@ -125,18 +154,19 @@ Return strict JSON matching schema.`;
   try {
     const { result: raw, provider } = await callLLM({ parts, schema: DISEASE_SCHEMA, temperature: 0.15 });
 
-    // The model occasionally omits or renames fields, or returns a string where
-    // an array is expected (gpt-4o-mini does this). Coerce to the UI shape and
-    // backfill from the top RAG-retrieved disease so the card is never blank.
+    // The model can omit/rename a field or return a string where an array is
+    // expected. Coerce to the UI shape; backfill ONLY with neutral, language-
+    // appropriate text — never a specific KB disease (that caused identical,
+    // image-mismatched results). The model's image analysis is the source of truth.
     const language = payload.language || "hinglish";
-    const topDisease = retrievedDiseases?.[0]?.raw || {};
+    const nb = NEUTRAL_BACKFILL[language] || NEUTRAL_BACKFILL.hinglish;
 
     const result = {
-      possible_issue: String(raw.possible_issue || raw.disease || raw.issue || topDisease.name || "Unconfirmed crop issue"),
-      confidence: coerceConfidence(raw.confidence, 0.6),
-      visual_signs: coerceList(raw.visual_signs, topDisease.symptoms || []),
-      organic_treatment: coerceList(raw.organic_treatment, topDisease.organicTreatment || []),
-      prevention: coerceList(raw.prevention, topDisease.prevention || []),
+      possible_issue: String(raw.possible_issue || raw.disease || raw.issue || nb.issue),
+      confidence: coerceConfidence(raw.confidence, 0.5),
+      visual_signs: coerceList(raw.visual_signs, [nb.sign]),
+      organic_treatment: coerceList(raw.organic_treatment, [nb.treat]),
+      prevention: coerceList(raw.prevention, []),
       escalation: coerceList(raw.escalation, ESCALATION_COPY[language] || ESCALATION_COPY.hinglish),
       voice_response: String(raw.voice_response || "").trim(),
       safety_note: String(raw.safety_note || safetyNote(language))

@@ -9,6 +9,8 @@
     "dev": "node scripts/dev-server.mjs",
     "download:whisper": "node scripts/download-whisper.mjs --model openai/whisper-small",
     "validate": "python3 tests/validate_project.py",
-    "test:api": "node tests/api_tests.js"
+    "test:api": "node tests/api_tests.js",
+    "test:crops": "node tests/crop_resolution_test.js",
+    "test:images": "node tests/image_uniqueness_test.js"
   }
 }
